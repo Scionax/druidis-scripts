@@ -3,6 +3,10 @@ document.addEventListener("click", (e: Event) => {
 	if(!e.target) { return; }
 	if(!(e.target instanceof Element)) { return; }
 	
+	// Check if a button was clicked.
+	const inputOrigin = e.target.closest("input");
+	if(inputOrigin && inputOrigin.type === "submit") { return runButtonPress(inputOrigin); }
+	
 	// Check if a link was clicked, and if it provides a valid URL. If not, return.
 	const origin = e.target.closest("a");
 	if(!origin || !origin.href) { return; }
@@ -17,3 +21,11 @@ window.addEventListener("popstate", (event: PopStateEvent) => {
 	Nav.updateURL(true, document.location.href, document.title, true);
 	Nav.runPageUpdate();
 });
+
+function runButtonPress(inputOrigin: HTMLInputElement) {
+	if(Nav.local) { console.log(`Global click on ${inputOrigin.id}.`); }
+	switch(inputOrigin.id) {
+		case "loginSubmit": return Account.submitLogin(inputOrigin);
+		case "signUpSubmit": return Account.submitSignIn(inputOrigin);
+	}
+}
