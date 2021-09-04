@@ -16,10 +16,17 @@ document.addEventListener("click", (e: Event) => {
 	Nav.runPageUpdate();
 });
 
-window.addEventListener("popstate", (event: PopStateEvent) => {
-	event.preventDefault();
+window.addEventListener("popstate", (e: PopStateEvent) => {
+	e.preventDefault();
 	Nav.updateURL(true, document.location.href, document.title, true);
 	Nav.runPageUpdate();
+});
+
+// When a form submits (such as pressting enter), instead "click" the submission, which will fire the correct javascript.
+window.addEventListener("submit", (e: Event) => {
+	e.preventDefault();
+	const submit = document.getElementById("main-section")?.querySelector(`input[type="submit"]`);
+	if(submit instanceof HTMLInputElement) { submit.click(); }
 });
 
 function runButtonPress(inputOrigin: HTMLInputElement) {
