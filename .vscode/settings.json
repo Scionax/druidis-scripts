@@ -1,0 +1,9 @@
+{
+	"deno.enable": true, // inline deno lint diagnostics, requires `deno.unstable`
+	"deno.unstable": true, // also provides unstable type declarations in VS Code
+	"deno.lint": true,
+	"deno.config": "./tsconfig.json",
+	"deno.suggest.imports.hosts": {
+		"https://deno.land": true
+	},
+}

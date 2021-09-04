@@ -1,0 +1,34 @@
+{
+    // "compileOnSave": true,
+    "compilerOptions": {
+		
+		// ------ Deno ------ //
+		"removeComments": true,
+		
+		// ------ TypeScript ------ //
+        // "target": "esnext",
+        // "baseUrl": ".",
+        // "outFile": "./public/scripts/druidis.min.js",
+        // "outDir": "./dist",
+        // "module": "esnext",
+		"module": "commonjs",
+		// "esModuleInterop": true,		// has to have 'commonjs', 'amd', or 'umd'
+        // "moduleResolution": "node",
+        "sourceRoot": "./",
+        "rootDir": "./",
+        "sourceMap": true,
+		"lib": ["esnext", "dom"],
+        
+		// "typeRoots": [ "./typings" ],
+		"plugins": [
+			{
+				"name": "typescript-deno-plugin",
+				"enable": true, // default is `true`
+				"importmap": "import_map.json"
+			}
+		],
+    },
+    // "include": [
+    //     "public/scripts/**/*"
+    // ],
+}
