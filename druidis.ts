@@ -16,6 +16,11 @@ class Nav {
 	static cacheStatic: number;		// Duration for caching static content (like about pages).
 	static cacheDynamic: number;	// Duration for caching dynamic content (like feeds).
 	
+	// Special functions to run when a specific page loads:
+	static pageLoad: { [id: string]: any } = {
+		"/user/logout": Account.logOut
+	};
+	
 	static initialize() {
 		
 		// Local Settings
@@ -46,7 +51,17 @@ class Nav {
 		
 		if(base === "") { Feed.initialize(); }
 		else if(base === "forum" && Nav.urlSeg[1]) { Feed.initialize(); }
-		else if(Nav.innerLoad) { Nav.loadInnerHtml(); }
+		
+		// Load standard pages. Run any special functions, if applicable.
+		else if(Nav.innerLoad) {
+			Nav.loadInnerHtml().then(() => {
+				if(Nav.pageLoad[Nav.urlPathname]) { Nav.pageLoad[Nav.urlPathname](); }
+			});
+		}
+		
+		else {
+			if(Nav.pageLoad[Nav.urlPathname]) { Nav.pageLoad[Nav.urlPathname](); }
+		}
 	}
 	
 	static async loadInnerHtml() {

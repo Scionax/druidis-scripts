@@ -1,41 +1,52 @@
 
 abstract class Account {
-	static loginId = 0;
+	static id = 0;
 	
 	static initialize() {
-		const curLogin = Account.loginId;
+		// const curLogin = Account.loginId;
+		Account.updateLoginId();
 		
+		// If the cookie state changed (such as from Logged Out to Logged In):
+		// if(Account.loginId !== curLogin) {
+		// 	if(Account.loginId) { Account.logIn(); }
+		// 	else { Account.logOut(); }
+		// }
+	}
+	
+	// Runs once a page is loaded.
+	static runAccountPage() {
+		const page = Nav.urlSeg[1];
+		if(!page) { return; }
+		if(page === "logout") { Account.logOut(); }
+	}
+	
+	static updateLoginId(): boolean {
+		Account.id = 0;
 		const loginCookie = Account.getLoginCookie();
-		if(loginCookie) {
-			const s = loginCookie.split(".");
-			Account.loginId = Number(s[0]) || 0;
-		} else {
-			Account.loginId = 0;
-		}
-		
-		if(Account.loginId !== curLogin) {
-			
-			// If the cookie state changed from Logged Out to Logged In:
-			if(Account.loginId) {
-				// Run Log In
-			}
-			
-			// If the cookie state changed from Logged In to Logged Out:
-			else {
-				// Run Log Out
-			}
-		}
-		console.log("login cookie", loginCookie);
+		if(!loginCookie) { return false; }
+		const s = loginCookie.split(".");
+		Account.id = Number(s[0]) || 0;
+		return true;
 	}
 	
 	static getLoginCookie() {
 		const cookies = document.cookie.split(";");
 		for(let i = 0; i < cookies.length; i++) {
 			const c = cookies[i].trim().split('=');
-			if(c[0] === "login") {
-				return c[1];
-			}
+			if(c[0] !== "login") { continue; }
+			return c[1];
 		}
+	}
+	
+	static logIn() {
+		if(Nav.local) { console.log(`Logged in with ID #${Account.id}.`); }
+		Nav.updateURL(true, Webpage.url, "Druidis");
+		Nav.runPageUpdate();
+	}
+	
+	static logOut() {
+		console.log("Logging Out...");
+		document.cookie = `login=deleted; expires=Thu, 01 Jan 1970 00:00:01 GM; Secure; path=/; domain=${location.host};`;
 	}
 	
 	static async submitLogin(elLogin: HTMLInputElement) {
@@ -58,16 +69,17 @@ abstract class Account {
 		// Call the API
 		const json = await API.callAPI("/user/login", data);
 		
+		elLogin.value = "Log In";
 		Alerts.error(!json, "Error: Server response was invalid. May need to contact the webmaster.", true);
-		if(Alerts.hasAlerts()) { Alerts.displayAlerts(); return; }
 		
-		// Verify the data, to see if there's final success.
-		// TODO: VERIFY
+		if(json.error) {
+			Alerts.error(true, json.error);
+			Alerts.displayAlerts();
+			return;
+		}
 		
-		// Success
-		
-		// TODO: Redirect, Process, etc.
-		console.log("Success. Redirect from here.");
+		// Check if the cookie is registered, to see if there's final success.
+		if(Account.updateLoginId()) { Account.logIn(); }
 	}
 	
 	static async submitSignIn(elSignUp: HTMLInputElement) {
@@ -98,7 +110,6 @@ abstract class Account {
 		const json = await API.callAPI("/user/sign-up", data);
 		
 		Alerts.error(!json, "Error: Server response was invalid. May need to contact the webmaster.", true);
-		if(Alerts.hasAlerts()) { Alerts.displayAlerts(); return; }
 		
 		// Verify the data, to see if there's final success.
 		// TODO: VERIFY
@@ -108,6 +119,7 @@ abstract class Account {
 		// TODO: Redirect, Process, etc.
 		
 		console.log(json);
+		if(Alerts.hasAlerts()) { Alerts.displayAlerts(); }
 	}
 }
 
