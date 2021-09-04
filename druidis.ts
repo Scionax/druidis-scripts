@@ -46,7 +46,16 @@ class Nav {
 		
 		if(base === "") { Feed.initialize(); }
 		else if(base === "forum" && Nav.urlSeg[1]) { Feed.initialize(); }
-		else if(Nav.innerLoad) { Nav.loadInnerHtml(); }
+		
+		// Run the Inner Page Load, then initialize any classes that rely on the HTML being present.
+		else if(Nav.innerLoad) {
+			Nav.loadInnerHtml().then(() => { Nav.initializeAfterLoad(base) });
+		}
+	}
+	
+	// Initialize any classes that rely on HTML being present (such as Login, which requires the login submission element).
+	static initializeAfterLoad(base: string) {
+		if(base === "user") { Account.initialize(); }
 	}
 	
 	static async loadInnerHtml() {
