@@ -1,0 +1,5 @@
+.vscode/
+docs/
+tsconfig.json
+_build.ts
+druidis.js
