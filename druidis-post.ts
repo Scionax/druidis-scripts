@@ -122,8 +122,8 @@ abstract class OpenGraph {
 			const feedElement = buildPost(OpenGraph.postData);
 			
 			// Attach Created Elements to Feed Section
-			Webpage.clearBlock("main-contain");
-			Webpage.addBlock(feedElement);
+			Webpage.clearBlockFromMain("main-contain");
+			Webpage.appendToMain(feedElement);
 		}
 	}
 	
@@ -199,7 +199,7 @@ abstract class PostPage {
 		forumElement.value = "";
 		submitElement.value = "Submit Post";
 		
-		Webpage.clearBlock("main-contain");
+		Webpage.clearBlockFromMain("main-contain");
 	}
 	
 	// Populate the Forum Selection Input
@@ -319,20 +319,32 @@ abstract class PostPage {
 	static handleFiles(files: FileList) {
 		for (const [_k, file] of Object.entries(files)) {
 			PostPage.uploadFile(file);
+			PostPage.previewFile(file);
 		}
 	}
 	
 	static uploadFile(file: File) {
 		const url = 'YOUR URL HERE';
-		const formData = new FormData();
+		const form = new FormData();
 		
-		formData.append('file', file);
+		form.set('file', file);
 		
-		fetch(url, {
-			method: 'POST',
-			body: formData
-		})
-		.then(() => { /* Done. Inform the user */ })
-		.catch(() => { /* Error. Inform the user */ })
+		// fetch(url, {
+		// 	method: 'POST',
+		// 	body: formData
+		// })
+		// .then(() => { /* Done. Inform the user */ })
+		// .catch(() => { /* Error. Inform the user */ })
+	}
+	
+	static previewFile(file: File) {
+		const reader = new FileReader();
+		reader.readAsDataURL(file);
+		reader.onloadend = function() {
+			const img = document.createElement('img') as HTMLImageElement;
+			img.src = reader.result as string;
+			const gal = document.getElementById("gallery") as HTMLElement;
+			Webpage.setElement(gal, img);
+		}
 	}
 }

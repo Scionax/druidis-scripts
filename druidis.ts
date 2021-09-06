@@ -82,7 +82,7 @@ class Nav {
 			const innerHtml = localStorage.getItem(`html:${Nav.urlPathname}`);
 			
 			if(innerHtml) {
-				Webpage.setMainSection(innerHtml);
+				Webpage.setElement(document.getElementById("main-section") as HTMLElement, innerHtml);
 				return;
 			}
 		}
@@ -90,7 +90,7 @@ class Nav {
 		// Otherwise, retrieve inner web content:
 		const response = await Webpage.getInnerHTML(Nav.urlPathname);
 		const contents = await response.text();
-		Webpage.setMainSection(contents);
+		Webpage.setElement(document.getElementById("main-section") as HTMLElement, contents);
 		Nav.saveLocalHtml();
 	}
 	
@@ -121,26 +121,27 @@ class Webpage {
 	static url: string;					// URL to the web server; e.g. localhost, druidis.org, etc.
 	
 	static clearMainSection() {
-		const mainSection = document.getElementById("main-section") as HTMLElement;
-		
-		for(let i = mainSection.children.length - 1; i >= 0; i--) {
-			const child = mainSection.children[i];
-			mainSection.removeChild(child);
+		Webpage.clearElement(document.getElementById("main-section") as HTMLElement);
+	}
+	
+	static clearElement(el: HTMLElement) {
+		for(let i = el.children.length - 1; i >= 0; i--) {
+			const child = el.children[i];
+			el.removeChild(child);
 		}
 	}
 	
-	static setMainSection(innerHtml: string) {
-		Webpage.clearMainSection();
-		const main = document.getElementById("main-section") as HTMLElement;
-		main.innerHTML = innerHtml;
+	static setElement(el: HTMLElement, childEl: string | HTMLElement) {
+		Webpage.clearElement(el);
+		if(typeof childEl === "string") { el.innerHTML = childEl;} else { el.appendChild(childEl); }
 	}
 	
-	static addBlock(element: HTMLElement) {
+	static appendToMain(el: HTMLElement) {
 		const mainSection = document.getElementById("main-section") as HTMLElement;
-		if(mainSection !== null) { mainSection.appendChild(element); }
+		if(mainSection !== null) { mainSection.appendChild(el); }
 	}
 	
-	static clearBlock(blockId: string) {
+	static clearBlockFromMain(blockId: string) {
 		const mainSection = document.getElementById("main-section") as HTMLElement;
 		
 		for(let i = mainSection.children.length - 1; i >= 0; i--) {

@@ -139,7 +139,7 @@ abstract class Feed {
 		for (const [_key, post] of Object.entries(cachedPosts)) {
 			if(!post.id) { return; }
 			const postElement = buildPost(post);
-			Webpage.addBlock(postElement);
+			Webpage.appendToMain(postElement);
 		}
 		
 		/*
