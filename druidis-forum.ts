@@ -1,3 +1,13 @@
+/*
+	// Forum Posts are cached locally to avoid extra retrieval calls:
+	localStorage.getItem(`posts:${forum}`)
+		- {{id}: Forum Post, {id}: Forum Post, {id}: Forum Post, ...}
+	
+	localStorage.getItem(`lastPull:${forum}`);
+		- Timestamp of the last time this forum was retrieved.
+		- If the timestamp exceeds the limit, it pulls a new set.
+		- It will only search for IDs that are not already cached.
+*/
 
 abstract class Forum {
 	

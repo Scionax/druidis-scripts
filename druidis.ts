@@ -18,7 +18,8 @@ class Nav {
 	
 	// Special functions to run when a specific page loads:
 	static pageLoad: { [id: string]: any } = {
-		"/user/logout": Account.logOut
+		"/user/logout": Account.logOut,
+		"/post": PostPage.initialize
 	};
 	
 	static initialize() {
@@ -49,7 +50,7 @@ class Nav {
 		// Clear the Main Section (if we're running an inner-load)
 		if(Nav.innerLoad) { Webpage.clearMainSection(); }
 		
-		if(base === "") { Forum.initialize(); }
+		if(base === "") { Feed.initialize(); /* Home Page */ }
 		else if(base === "forum" && Nav.urlSeg[1]) { Forum.initialize(); }
 		else if(base === "feed") { Feed.initialize(); }
 		

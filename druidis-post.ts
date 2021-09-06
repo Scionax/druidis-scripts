@@ -287,5 +287,52 @@ abstract class PostPage {
 			
 			console.log(json);
 		});
+		
+		// Drop & Drag Area
+		let dropArea = document.getElementById('dropArea') as HTMLElement;
+		
+		dropArea.addEventListener('dragenter', (e) => PostPage.dragEnter(e), false)
+		dropArea.addEventListener('dragleave', (e) => PostPage.dragLeave(e), false)
+		dropArea.addEventListener('dragover', (e) => PostPage.dragOver(e), false)
+		dropArea.addEventListener('drop', (e) => PostPage.drop(e), false)
+	}
+	
+	static dragPrep(e: Event) {
+		e.preventDefault();
+		e.stopPropagation();
+		return document.getElementById('dropArea') as HTMLElement;
+	}
+	
+	static dragEnter(e: DragEvent) { PostPage.dragPrep(e).classList.add('highlight'); }
+	static dragLeave(e: DragEvent) { PostPage.dragPrep(e).classList.remove('highlight'); }
+	static dragOver(e: DragEvent) { PostPage.dragPrep(e).classList.add('highlight'); }
+	
+	static drop(e: DragEvent) {
+		const area = PostPage.dragPrep(e);
+		area.classList.remove('highlight');
+		const dt = e.dataTransfer;
+		if(!dt) { return; }
+		const files = dt.files;
+		PostPage.handleFiles(files)
+	}
+	
+	static handleFiles(files: FileList) {
+		for (const [_k, file] of Object.entries(files)) {
+			PostPage.uploadFile(file);
+		}
+	}
+	
+	static uploadFile(file: File) {
+		const url = 'YOUR URL HERE';
+		const formData = new FormData();
+		
+		formData.append('file', file);
+		
+		fetch(url, {
+			method: 'POST',
+			body: formData
+		})
+		.then(() => { /* Done. Inform the user */ })
+		.catch(() => { /* Error. Inform the user */ })
 	}
 }

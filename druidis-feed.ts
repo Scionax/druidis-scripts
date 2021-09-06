@@ -81,6 +81,7 @@ abstract class Feed {
 	// TODO: Need to update this function to work with feeds.
 	static async load() {
 		const feed = Feed.currentFeed;
+		console.log("load feed", feed);
 		if(!feed) { return; }
 		
 		// Feed Handling
@@ -150,8 +151,11 @@ abstract class Feed {
 	}
 	
 	static initialize() {
+		const base = Nav.urlSeg[0];
 		
-		if(Nav.urlSeg[0] === "feed") {
+		if(base === "") {
+			Feed.currentFeed = "Home";
+		} else if(base === "feed") {
 			Feed.currentFeed = Nav.urlSeg.length > 1 ? decodeURI(Nav.urlSeg[1]) : "Home";
 		}
 		
