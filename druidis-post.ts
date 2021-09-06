@@ -206,23 +206,18 @@ abstract class PostPage {
 	static populateForumSelect() {
 		const sel: HTMLSelectElement = document.getElementById("postForum") as HTMLSelectElement;
 		
-		for (const [key, fData] of Object.entries(Feed.schema)) {
-			
-			// Only Find the Parent Forums
-			if(typeof fData.parent !== "undefined") { continue; }
+		for (const [feed, forums] of Object.entries(Feed.schema)) {
 			
 			const option = document.createElement("option") as HTMLOptionElement;
-			option.value = key;
-			option.text = key;
+			option.value = feed;
+			option.text = feed;
 			option.setAttribute("style", "font-weight: bold; font-size: 1.2em;");
 			sel.add(option);
 			
-			if(typeof fData.children === "undefined") { continue; }
-			
-			for(let i = 0; i < fData.children.length; i++) {
+			for(let i = 0; i < forums.length; i++) {
 				const option = document.createElement("option") as HTMLOptionElement;
-				option.value = fData.children[i];
-				option.text = ` - ${fData.children[i]}`;
+				option.value = forums[i];
+				option.text = ` - ${forums[i]}`;
 				sel.add(option);
 			}
 		}
@@ -274,7 +269,7 @@ abstract class PostPage {
 			if(!OpenGraph.postData.w || !OpenGraph.postData.h) { alert("Error: The system failed to identify image width and height."); return; }
 			
 			// Make sure the forum is valid.
-			if(!Feed.schema || !Feed.schema[forumElement.value]) { alert("Error: The forum selected is considered invalid."); return; }
+			if(!Forum.schema || !Forum.schema[forumElement.value]) { alert("Error: The forum selected is considered invalid."); return; }
 			
 			// Assign the forum to our post content:
 			OpenGraph.postData.forum = forumElement.value;

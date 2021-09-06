@@ -49,8 +49,9 @@ class Nav {
 		// Clear the Main Section (if we're running an inner-load)
 		if(Nav.innerLoad) { Webpage.clearMainSection(); }
 		
-		if(base === "") { Feed.initialize(); }
-		else if(base === "forum" && Nav.urlSeg[1]) { Feed.initialize(); }
+		if(base === "") { Forum.initialize(); }
+		else if(base === "forum" && Nav.urlSeg[1]) { Forum.initialize(); }
+		else if(base === "feed") { Feed.initialize(); }
 		
 		// Load standard pages. Run any special functions, if applicable.
 		else if(Nav.innerLoad) {
@@ -313,7 +314,7 @@ interface PostData {
 
 // 	.origImg					// A fully qualified URL to an image.
 // 	.forum, .id, .img			// A relative path to the image based on forum+id.
-function buildPost(post: PostData) {
+function buildPost(post: PostData, isFeed = false) {
 	
 	// --------------------- //
 	// ----- Left Tray ----- //
@@ -398,16 +399,13 @@ function buildPost(post: PostData) {
 	// Link List
 	const linkList = createElement("div", {"class": "linkList"});
 	
-	// Check for forum parent. If present, link the parent in the breadcrumb.
-	const sch = post.forum ? Feed.schema[post.forum] : null;
-	
-	if(sch && sch.parent && sch.parent !== Feed.forum) {
-		const crumb = createElement("a", {"class": "link", "href": `/forum/${sch.parent}`});
-		crumb.innerHTML = sch.parent;
+	// Link the feed in the breadcrumb.
+	if(post.forum && !isFeed) {
+		const feedName = Forum.schema[post.forum];
+		const crumb = createElement("a", {"class": "link", "href": `/feed/${feedName}`});
+		crumb.innerHTML = feedName;
 		linkList.appendChild(crumb);
-	}
-	
-	if(post.forum && post.forum !== Feed.forum) {
+	} else if(post.forum && isFeed) {
 		const crumb = createElement("a", {"class": "link", "href": `/forum/${post.forum}`});
 		crumb.innerHTML = post.forum;
 		linkList.appendChild(crumb);

@@ -1,32 +1,18 @@
 
 abstract class Feed {
 	
-	static forum: string;
-	static schema: { [id: string]: { children?: string[], parent?: string } } = {"News":{"children":["Business","Economic","Environment","Legal","Politics","Social Issues","World News"]},"Business":{"parent":"News"},"Economic":{"parent":"News"},"Environment":{"parent":"News"},"Legal":{"parent":"News"},"Politics":{"parent":"News"},"Social Issues":{"parent":"News"},"World News":{"parent":"News"},"Informative":{"children":["Education","History","Science","Technology"]},"Education":{"parent":"Informative"},"History":{"parent":"Informative"},"Science":{"parent":"Informative"},"Technology":{"parent":"Informative"},"Entertainment":{"children":["Books","Gaming","Movies","Music","People","Shows","Sports","Tabletop Games","Virtual Reality"]},"Books":{"parent":"Entertainment"},"Gaming":{"parent":"Entertainment"},"Movies":{"parent":"Entertainment"},"Music":{"parent":"Entertainment"},"People":{"parent":"Entertainment"},"Shows":{"parent":"Entertainment"},"Sports":{"parent":"Entertainment"},"Tabletop Games":{"parent":"Entertainment"},"Virtual Reality":{"parent":"Entertainment"},"Lifestyle":{"children":["Fashion","Fitness","Food","Health","Recipes","Social Life","Relationships","Travel"]},"Fashion":{"parent":"Lifestyle"},"Fitness":{"parent":"Lifestyle"},"Food":{"parent":"Lifestyle"},"Health":{"parent":"Lifestyle"},"Recipes":{"parent":"Lifestyle"},"Relationships":{"parent":"Lifestyle"},"Social Life":{"parent":"Lifestyle"},"Travel":{"parent":"Lifestyle"},"Fun":{"children":["Ask","Cosplay","Cute","Forum Games","Funny"]},"Ask":{"parent":"Fun"},"Cosplay":{"parent":"Fun"},"Cute":{"parent":"Fun"},"Forum Games":{"parent":"Fun"},"Funny":{"parent":"Fun"},"Creative":{"children":["Artwork","Crafts","Design","Writing"]},"Artwork":{"parent":"Creative"},"Crafts":{"parent":"Creative"},"Design":{"parent":"Creative"},"Writing":{"parent":"Creative"}};
+	static currentFeed: string;
+	static schema: { [forum: string]: string[] } = {"Entertainment":["Shows","Movies","People","Sports","Gaming","Virtual Reality","Tabletop Games","Music","Books"],"News":["World News","Social Issues","Politics","Environment","Business","Economic","Legal"],"Informative":["Technology","Science","Education","History"],"Lifestyle":["Fashion","Food","Health","Fitness","Social Life","Relationships","Recipes","Travel"],"Fun":["Funny","Ask","Cute","Forum Games","Cosplay"],"Creative":["Crafts","Artwork","Design","Writing"],"Home":["Shows","Movies","People","Sports","Gaming","Virtual Reality","Tabletop Games","Music","Books","World News","Social Issues","Environment","Politics","Business","Economic","Legal","Technology","Science","Education","History","Fashion","Food","Health","Fitness","Social Life","Relationships","Recipes","Travel","Funny","Cute","Ask","Cosplay","Forum Games","Crafts","Artwork","Design","Writing"]};
 	
-	// scanType
-	//		0 = New Scan. Finds new content, starting from the very top.
-	//		1 = Ascending Scan. Used to find recent updates when your cache is already well-updated. Uses High ID range.
-	//		-1 = Descending Scan. Used for auto-loading, when user is scrolling down. Uses Low ID range.
-	static async fetchForumPost(forum: string, idHigh = -1, idLow = -1, scanType = 1): Promise<PostData[]> {
+	static async fetchPosts(feed: string, page = 0): Promise<PostData[]> {
 		
 		// Build Query String
-		let query;
-		
-		if(scanType === 1) {
-			query = `?s=asc`;
-			if(idHigh > -1) { query += `&h=${idHigh}`; } 
-		} else if(scanType === -1) {
-			query = `?s=desc`;
-			if(idLow > -1) { query += `&l=${idLow}`; }
-		} else {
-			query = (idHigh > -1) ? `?h=${idHigh}` : "";
-		}
+		const query = page ? `?p=${page}` : '';
 		
 		console.log("--- Fetching Results ---");
-		console.log(`${API.url}/forum/${forum}${query}`);
+		console.log(`${API.url}/feed/${feed}${query}`);
 		
-		const response = await fetch(`${API.url}/forum/${forum}${query}`, { headers:{
+		const response = await fetch(`${API.url}/feed/${feed}${query}`, { headers:{
 			'Content-Type': 'application/json',
 			'Credentials': 'include', // Needed or Cookies will not be sent.
 			// 'Content-Type': 'application/x-www-form-urlencoded',
@@ -34,9 +20,9 @@ abstract class Feed {
 		
 		return await response.json();
 	}
-
-	static getCachedPosts(forum: string): { [id: string]: PostData } {
-		const cachedPosts = window.localStorage.getItem(`posts:${forum}`);
+	
+	static getCachedPosts(feed: string): { [id: string]: PostData } {
+		const cachedPosts = window.localStorage.getItem(`posts:${feed}`);
 		
 		if(cachedPosts) {
 			try {
@@ -49,8 +35,8 @@ abstract class Feed {
 		return {};
 	}
 	
-	static cacheForumPosts(forum: string, postResponse: PostData[]): Record<string, PostData> {
-		const cachedPosts = Feed.getCachedPosts(forum);
+	static cachePosts(feed: string, postResponse: PostData[]): Record<string, PostData> {
+		const cachedPosts = Forum.getCachedPosts(feed);
 		const rawPosts = postResponse ? postResponse : [];
 		
 		if(!Array.isArray(rawPosts)) { return {}; }
@@ -66,13 +52,16 @@ abstract class Feed {
 			// Check if Cached Posts already contains this entry. Add if it doesn't.
 			if(!cachedPosts[id]) {
 				cachedPosts[id] = rawPost;
-				window.localStorage.setItem(`posts:${forum}`, JSON.stringify(cachedPosts));
+				window.localStorage.setItem(`posts:${feed}`, JSON.stringify(cachedPosts));
 			}
 		}
 		
 		return cachedPosts;
 	}
-
+	
+	// TODO: Feed doesn't work like this:
+	// TODO: Feed doesn't work like this:
+	// TODO: Feed doesn't work like this:
 	static getIdRangeOfCachedPosts(cachedPosts: Record<string, PostData>) {
 		let high = -1;
 		let low = Infinity;
@@ -87,63 +76,69 @@ abstract class Feed {
 		return {idHigh: high, idLow: low};
 	}
 	
+	// TODO: Need to update this function to work with feeds.
+	// TODO: Need to update this function to work with feeds.
+	// TODO: Need to update this function to work with feeds.
 	static async load() {
-		if(!Feed.forum) { return; }
+		const feed = Feed.currentFeed;
+		if(!feed) { return; }
 		
-		// Forum Handling
-		const forum = Feed.forum;
-		
+		// Feed Handling
 		let willFetch = false;
-		let scanType = 0; // 0 = new, 1 = asc, -1 = desc
+		let page = 0;
+		// let scanType = 0; // 0 = new, 1 = asc, -1 = desc
 		
-		// Verify that `forum` is valid.
-		if(Feed.schema && !Feed.schema[forum]) {
-			console.error(`"${forum}" forum was not detected. Cannot load feed.`);
-			return;
-		}
+		// // Verify that `feed` is valid.
+		// if(Feed.schema && !Feed.schema[feed]) {
+		// 	console.error(`"${feed}" feed was not detected. Cannot load.`);
+		// 	return;
+		// }
 		
 		// Get Cached Data
-		let cachedPosts = Feed.getCachedPosts(forum);
+		let cachedPosts = Feed.getCachedPosts(feed);
 		
-		// Determine what type of Request to Run based on when the last "pull" was.
-		const lastPull = Number(window.localStorage.getItem(`lastPull:${forum}`)) || 0;
+		// // Determine what type of Request to Run based on when the last "pull" was.
+		// const lastPull = Number(window.localStorage.getItem(`lastPull:${feed}`)) || 0;
 		
-		// If we haven't located cached IDs, then idHigh will be -1, and we must fore a fetch.
-		const {idHigh, idLow} = Feed.getIdRangeOfCachedPosts(cachedPosts);
-		if(idHigh === -1) { willFetch = true; }
+		// // If we haven't located cached IDs, then idHigh will be -1, and we must fore a fetch.
+		// const {idHigh, idLow} = Feed.getIdRangeOfCachedPosts(cachedPosts);
+		// if(idHigh === -1) { willFetch = true; }
 		
-		// If we haven't pulled in at least five minutes, we'll make sure a new fetch happens.
-		if(willFetch === false && Nav.loadDate - lastPull > 300) {
-			willFetch = true;
-			scanType = 1;
+		// // If we haven't pulled in at least five minutes, we'll make sure a new fetch happens.
+		// if(willFetch === false && Nav.loadDate - lastPull > 300) {
+		// 	willFetch = true;
+		// 	scanType = 1;
 			
-			// If we haven't pulled in 12 hours, run a "new" scan (instead of ascending) to force newest reset.
-			if(lastPull < Nav.loadDate - (60 * 60 * 24)) {
-				scanType = 0;
+		// 	// If we haven't pulled in 12 hours, run a "new" scan (instead of ascending) to force newest reset.
+		// 	if(lastPull < Nav.loadDate - (60 * 60 * 24)) {
+		// 		scanType = 0;
 				
-				// Clear out stale data.
-				window.localStorage.removeItem(`posts:${forum}`);
-			}
-		}
+		// 		// Clear out stale data.
+		// 		window.localStorage.removeItem(`posts:${feed}`);
+		// 	}
+		// }
 		
-		// Fetch recent forum feed data.
+		// TODO: REMOVE
+		willFetch = true;
+		
+		// Fetch recent feed data.
 		if(willFetch) {
 			try {
-				const postResponse = await Feed.fetchForumPost(forum, idHigh, idLow, scanType);
+				const postResponse = await Feed.fetchPosts(feed, page);
 				
 				// Cache Results
-				cachedPosts = Feed.cacheForumPosts(forum, postResponse);
-				window.localStorage.setItem(`lastPull:${forum}`, `${Nav.loadDate}`);
+				cachedPosts = Feed.cachePosts(feed, postResponse);
+				window.localStorage.setItem(`lastPull:${feed}`, `${Nav.loadDate}`);
 			} catch {
-				console.error(`Error with response in forum: ${forum}`)
+				console.error(`Error with response in feed: ${feed}`)
 			}
 		}
 		
 		// Display Cached Data
 		for (const [_key, post] of Object.entries(cachedPosts)) {
 			if(!post.id) { return; }
-			const feedElement = buildPost(post);
-			Webpage.addBlock(feedElement);
+			const postElement = buildPost(post);
+			Webpage.addBlock(postElement);
 		}
 		
 		/*
@@ -156,11 +151,12 @@ abstract class Feed {
 	
 	static initialize() {
 		
-		// .forum
-		if(Nav.urlSeg[0] === "forum" && Nav.urlSeg.length > 1) { Feed.forum = decodeURI(Nav.urlSeg[1]); } else { Feed.forum = ""; }
-		if(!Feed.schema[Feed.forum]) { Feed.forum = ""; }
+		if(Nav.urlSeg[0] === "feed") {
+			Feed.currentFeed = Nav.urlSeg.length > 1 ? decodeURI(Nav.urlSeg[1]) : "Home";
+		}
 		
-		// Asynchronous Load
-		Feed.load();
+		if(!Feed.schema[Feed.currentFeed]) { Feed.currentFeed = ""; }
+		
+		Feed.load(); // Asynchronous Load
 	}
 }
