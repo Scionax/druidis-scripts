@@ -1,4 +1,6 @@
 /*
+	Forum class uses certain shared methods from "Feed"
+	
 	// Forum Posts are cached locally to avoid extra retrieval calls:
 	localStorage.getItem(`posts:${forum}`)
 		- {{id}: Forum Post, {id}: Forum Post, {id}: Forum Post, ...}
@@ -18,7 +20,7 @@ abstract class Forum {
 	//		0 = New Scan. Finds new content, starting from the very top.
 	//		1 = Ascending Scan. Used to find recent updates when your cache is already well-updated. Uses High ID range.
 	//		-1 = Descending Scan. Used for auto-loading, when user is scrolling down. Uses Low ID range.
-	static async fetchPosts(forum: string, idHigh = -1, idLow = -1, scanType = 1): Promise<PostData[]> {
+	static async fetchForumPosts(forum: string, idHigh = -1, idLow = -1, scanType = 1): Promise<PostData[]> {
 		
 		// Build Query String
 		let query;
@@ -33,56 +35,10 @@ abstract class Forum {
 			query = (idHigh > -1) ? `?h=${idHigh}` : "";
 		}
 		
-		console.log("--- Fetching Results ---");
-		console.log(`${API.url}/forum/${forum}${query}`);
-		
-		const response = await fetch(`${API.url}/forum/${forum}${query}`, { headers:{
-			'Content-Type': 'application/json',
-			'Credentials': 'include', // Needed or Cookies will not be sent.
-			// 'Content-Type': 'application/x-www-form-urlencoded',
-		}});
-		
+		const response = await Feed.fetchPosts(`/forum/${forum}${query}`);
 		return await response.json();
 	}
-
-	static getCachedPosts(forum: string): { [id: string]: PostData } {
-		const cachedPosts = window.localStorage.getItem(`posts:${forum}`);
-		
-		if(cachedPosts) {
-			try {
-				return JSON.parse(cachedPosts);
-			} catch {
-				return {};
-			}
-		}
-		
-		return {};
-	}
 	
-	static cachePosts(forum: string, postResponse: PostData[]): Record<string, PostData> {
-		const cachedPosts = Forum.getCachedPosts(forum);
-		const rawPosts = postResponse ? postResponse : [];
-		
-		if(!Array.isArray(rawPosts)) { return {}; }
-		
-		// Loop through all entries in the post data, and append to cached posts.
-		for(let i = 0; i < rawPosts.length; i++) {
-			const rawPost = rawPosts[i];
-			
-			// Make sure there's a valid ID
-			const id = Number(rawPost.id || 0);
-			if(!id) { continue; }
-			
-			// Check if Cached Posts already contains this entry. Add if it doesn't.
-			if(!cachedPosts[id]) {
-				cachedPosts[id] = rawPost;
-				window.localStorage.setItem(`posts:${forum}`, JSON.stringify(cachedPosts));
-			}
-		}
-		
-		return cachedPosts;
-	}
-
 	static getIdRangeOfCachedPosts(cachedPosts: Record<string, PostData>) {
 		let high = -1;
 		let low = Infinity;
@@ -113,9 +69,9 @@ abstract class Forum {
 		}
 		
 		// Get Cached Data
-		let cachedPosts = Forum.getCachedPosts(forum);
+		let cachedPosts = Feed.getCachedPosts(forum);
 		
-		// Determine what type of Request to Run based on when the last "pull" was.
+		// Determine what type of request to run based on when the last "pull" was.
 		const lastPull = Number(window.localStorage.getItem(`lastPull:${forum}`)) || 0;
 		
 		// If we haven't located cached IDs, then idHigh will be -1, and we must fore a fetch.
@@ -139,10 +95,10 @@ abstract class Forum {
 		// Fetch recent forum data.
 		if(willFetch) {
 			try {
-				const postResponse = await Forum.fetchPosts(forum, idHigh, idLow, scanType);
+				const postResponse = await Forum.fetchForumPosts(forum, idHigh, idLow, scanType);
 				
 				// Cache Results
-				cachedPosts = Forum.cachePosts(forum, postResponse);
+				cachedPosts = Feed.cachePosts(forum, postResponse);
 				window.localStorage.setItem(`lastPull:${forum}`, `${Nav.loadDate}`);
 			} catch {
 				console.error(`Error with response in forum: ${forum}`)
