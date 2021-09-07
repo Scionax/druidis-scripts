@@ -13,8 +13,8 @@ class Nav {
 	
 	// Settings
 	static local: boolean;			// Indicates that we're on localhost (or dev system).
-	static cacheStatic: number;		// Duration for caching static content (like about pages).
-	static cacheDynamic: number;	// Duration for caching dynamic content (like feeds).
+	static cacheStatic: number;		// [Required for Local] Duration for caching static content (like about pages).
+	static cacheDynamic: number;	// [Required for Local] Duration for caching dynamic content (like feeds).
 	
 	// Special functions to run when a specific page loads:
 	static pageLoad: { [id: string]: any } = {
@@ -114,6 +114,9 @@ class Nav {
 		Nav.cacheStatic = sta;
 		Nav.cacheDynamic = dyn;
 	}
+	
+	static mainHeight() { return (document.getElementById("main-section") as HTMLElement).scrollHeight; }
+	static scrollDist() { return Nav.mainHeight() - window.scrollY - window.innerHeight; }
 }
 
 class Webpage {

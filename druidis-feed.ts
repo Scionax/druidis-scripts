@@ -1,10 +1,11 @@
 
 abstract class Feed {
 	
+	static lastAutoload = 0;
 	static currentFeed: string;
 	static schema: { [forum: string]: string[] } = {"Entertainment":["Shows","Movies","People","Sports","Gaming","Virtual Reality","Tabletop Games","Music","Books"],"News":["World News","Social Issues","Politics","Environment","Business","Economic","Legal"],"Informative":["Technology","Science","Education","History"],"Lifestyle":["Fashion","Food","Health","Fitness","Social Life","Relationships","Recipes","Travel"],"Fun":["Funny","Ask","Cute","Forum Games","Cosplay"],"Creative":["Crafts","Artwork","Design","Writing"],"Home":["Shows","Movies","People","Sports","Gaming","Virtual Reality","Tabletop Games","Music","Books","World News","Social Issues","Environment","Politics","Business","Economic","Legal","Technology","Science","Education","History","Fashion","Food","Health","Fitness","Social Life","Relationships","Recipes","Travel","Funny","Cute","Ask","Cosplay","Forum Games","Crafts","Artwork","Design","Writing"]};
 	
-	static async fetchFeedPosts(feed: string, tag = "", pos = 0): Promise<{ tag: string, start: string, end: string, post: PostData[]}> {
+	static async fetchFeedPosts(feed: string, tag = "", pos = 0): Promise<{ tag: string, start: string, end: string, posts: PostData[]}> {
 		const query = tag && pos ? `?tag=${tag}&p=${pos}` : '';
 		const response = await Feed.fetchPosts(`/feed/${feed}${query}`);
 		return await response.json();
@@ -61,16 +62,14 @@ abstract class Feed {
 	}
 	
 	static async load() {
+		if(!Feed.currentFeed) { return; }
+		await Feed.loadMore();
+		const cachedPosts = Feed.getCachedPosts(Feed.currentFeed);
+		Feed.displayPosts(Object.entries(cachedPosts));
+	}
+	
+	static async loadMore() {
 		const feed = Feed.currentFeed;
-		if(!feed) { return; }
-		
-		// Feed Handling
-		let willFetch = false;
-		
-		// Get Cached Data
-		let cachedPosts = Feed.getCachedPosts(feed);
-		const numPosts = Object.keys(cachedPosts).length || 0;
-		if(numPosts === 0) { willFetch = true; }
 		
 		// Determine what type of request to run based on any feed metadata we have:
 		const meta = (window.localStorage.getItem(`feedMeta:${feed}`) || ":").split(":");
@@ -78,7 +77,7 @@ abstract class Feed {
 		const pos = Number(meta[1]) || 0;
 		
 		// If we've reached the end of the feed, do not make any additional requests.
-		if(pos === -1) { willFetch = false; }
+		const willFetch = tag && pos === -1 ? false : true;
 		
 		// Fetch recent feed data.
 		if(willFetch) {
@@ -87,31 +86,54 @@ abstract class Feed {
 				
 				// If the feed tag has changed, we can clear the old data.
 				if(tag !== resp.tag) {
+					Webpage.clearMainSection();
 					window.localStorage.setItem(`posts:${feed}`, `{}`);
 				}
 				
+				// Display Results
+				Feed.displayPosts(Object.entries(resp.posts));
+				
 				// Cache Results
-				cachedPosts = Feed.cachePosts(feed, resp.post);
-				window.localStorage.setItem(`feedMeta:${feed}`, `${resp.tag}:${resp.end}`);
+				Feed.cachePosts(feed, resp.posts);
+				
+				const p = Number(resp.start) > 0 && Number(resp.end) <= Number(resp.start) ? "-1" : resp.end as string;
+				window.localStorage.setItem(`feedMeta:${feed}`, `${resp.tag}:${p}`);
 				
 			} catch {
 				console.error(`Error with response in feed: ${feed}`)
 			}
 		}
+	}
+	
+	static allowAutoLoad(): boolean {
 		
-		// Display Cached Data
-		for (const [_key, post] of Object.entries(cachedPosts)) {
-			if(!post.id) { return; }
+		// Make sure we have scroll room, otherwise auto-load might confuse the "bottom" as whatever immediately loads.
+		if(Nav.mainHeight() < 1500) { return false; }
+		
+		// Only continue if the user's scroll is nearing the bottom of page.
+		if(Nav.scrollDist() > 500) { return false; }
+		
+		// Don't allow auto-loads more than every 2.5 seconds.
+		if(Date.now() - Feed.lastAutoload < 2500) { return false; }
+		
+		// Cache this autoload to prevent repeats.
+		Feed.lastAutoload = Date.now();
+		
+		return true;
+	}
+	
+	static displayPosts(pData: [string, PostData][]) {
+		for (const [_key, post] of pData) {
+			if(!post.id) { continue; }
 			const postElement = buildPost(post);
 			Webpage.appendToMain(postElement);
 		}
-		
-		/*
-			// Procedure on scrolling:
-			- Check if the user scrolls near an unknown ID range / non-cached results.
-			- Load the most recent 10 posts in the forum.
-			- Update the ID range that the user has retrieved.
-		*/
+	}
+	
+	// Auto-Load more posts.
+	static autoLoad() {
+		if(!Feed.allowAutoLoad()) { return; }
+		Feed.loadMore();
 	}
 	
 	static initialize() {
@@ -126,5 +148,8 @@ abstract class Feed {
 		if(!Feed.schema[Feed.currentFeed]) { Feed.currentFeed = ""; }
 		
 		Feed.load(); // Asynchronous Load
+		
+		// Register the Auto-Load mechanics:
+		window.addEventListener("scroll", Feed.autoLoad);
 	}
 }

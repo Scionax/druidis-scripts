@@ -5,7 +5,7 @@ document.addEventListener("click", (e: Event) => {
 	
 	// Check if a button was clicked.
 	const inputOrigin = e.target.closest("input");
-	if(inputOrigin && inputOrigin.type === "submit") { return runButtonPress(inputOrigin); }
+	if(inputOrigin && inputOrigin.type === "submit") { return runSubmitPress(inputOrigin); }
 	
 	// Check if a link was clicked, and if it provides a valid URL. If not, return.
 	const origin = e.target.closest("a");
@@ -29,7 +29,7 @@ window.addEventListener("submit", (e: Event) => {
 	if(submit instanceof HTMLInputElement) { submit.click(); }
 });
 
-function runButtonPress(inputOrigin: HTMLInputElement) {
+function runSubmitPress(inputOrigin: HTMLInputElement) {
 	if(Nav.local) { console.log(`Global click on ${inputOrigin.id}.`); }
 	switch(inputOrigin.id) {
 		case "loginSubmit": return Account.submitLogin(inputOrigin);

@@ -13,7 +13,6 @@
 
 abstract class Forum {
 	
-	static currentForum: string;
 	static schema: { [forum: string]: string } = {"Business":"News","Economic":"News","Environment":"News","Legal":"News","Politics":"News","Social Issues":"News","World News":"News","Education":"Informative","History":"Informative","Science":"Informative","Technology":"Informative","Books":"Entertainment","Gaming":"Entertainment","Movies":"Entertainment","Music":"Entertainment","People":"Entertainment","Shows":"Entertainment","Sports":"Entertainment","Tabletop Games":"Entertainment","Virtual Reality":"Entertainment","Fashion":"Lifestyle","Fitness":"Lifestyle","Food":"Lifestyle","Health":"Lifestyle","Recipes":"Lifestyle","Relationships":"Lifestyle","Social Life":"Lifestyle","Travel":"Lifestyle","Ask":"Fun","Cosplay":"Fun","Cute":"Fun","Forum Games":"Fun","Funny":"Fun","Artwork":"Creative","Crafts":"Creative","Design":"Creative","Writing":"Creative"};
 	
 	// scanType
@@ -54,37 +53,27 @@ abstract class Forum {
 	}
 	
 	static async load() {
-		if(!Forum.currentForum) { return; }
-		
-		// Forum Handling
-		const forum = Forum.currentForum;
+		const forum = Feed.currentFeed;
+		if(!forum) { return; }
 		
 		let willFetch = false;
 		let scanType = 0; // 0 = new, 1 = asc, -1 = desc
-		
-		// Verify that `forum` is valid.
-		if(Forum.schema && !Forum.schema[forum]) {
-			console.error(`"${forum}" forum was not detected. Cannot load.`);
-			return;
-		}
-		
-		// Get Cached Data
 		let cachedPosts = Feed.getCachedPosts(forum);
 		
 		// Determine what type of request to run based on when the last "pull" was.
 		const lastPull = Number(window.localStorage.getItem(`lastPull:${forum}`)) || 0;
 		
-		// If we haven't located cached IDs, then idHigh will be -1, and we must fore a fetch.
+		// If we haven't located cached IDs, then idHigh will be -1, and we must force a fetch.
 		const {idHigh, idLow} = Forum.getIdRangeOfCachedPosts(cachedPosts);
 		if(idHigh === -1) { willFetch = true; }
 		
-		// If we haven't pulled in at least five minutes, we'll make sure a new fetch happens.
-		if(willFetch === false && Nav.loadDate - lastPull > 300) {
+		// If we haven't pulled in at least ten minutes, we'll make sure a new fetch happens.
+		if(willFetch === false && Nav.loadDate - lastPull > 600) {
 			willFetch = true;
 			scanType = 1;
 			
-			// If we haven't pulled in 12 hours, run a "new" scan (instead of ascending) to force newest reset.
-			if(lastPull < Nav.loadDate - (60 * 60 * 24)) {
+			// If we haven't pulled in 5 hours, run a "new" scan (instead of ascending) to force newest reset.
+			if(lastPull < Nav.loadDate - (60 * 60 * 5)) {
 				scanType = 0;
 				
 				// Clear out stale data.
@@ -106,27 +95,42 @@ abstract class Forum {
 		}
 		
 		// Display Cached Data
-		for (const [_key, post] of Object.entries(cachedPosts)) {
-			if(!post.id) { return; }
-			const postElement = buildPost(post);
-			Webpage.appendToMain(postElement);
-		}
+		Feed.displayPosts(Object.entries(cachedPosts).reverse());
+	}
+	
+	// Auto-Load more posts.
+	static async autoLoad() {
+		if(!Feed.allowAutoLoad()) { return; }
 		
-		/*
-			// Procedure on scrolling:
-			- Check if the user scrolls near an unknown ID range / non-cached results.
-			- Load the most recent 10 posts in the forum.
-			- Update the ID range that the user has retrieved.
-		*/
+		// Get Relevant Status Information
+		const forum = Feed.currentFeed;
+		let cachedPosts = Feed.getCachedPosts(forum);
+		const {idHigh, idLow} = Forum.getIdRangeOfCachedPosts(cachedPosts);
+		
+		// Don't auto-load if we've reached the lower limit:
+		if(idLow <= 1) { return; }
+		
+		// Run the Auto-Loader
+		const postResponse = await Forum.fetchForumPosts(forum, idHigh, idLow, -1);
+		
+		// Cache Results
+		cachedPosts = Feed.cachePosts(forum, postResponse);
+		window.localStorage.setItem(`lastPull:${forum}`, `${Nav.loadDate}`);
+		
+		// Display Posts
+		Feed.displayPosts(Object.entries(postResponse));
 	}
 	
 	static initialize() {
 		
 		// .forum
-		if(Nav.urlSeg[0] === "forum" && Nav.urlSeg.length > 1) { Forum.currentForum = decodeURI(Nav.urlSeg[1]); } else { Forum.currentForum = ""; }
-		if(!Forum.schema[Forum.currentForum]) { Forum.currentForum = ""; }
+		if(Nav.urlSeg[0] === "forum" && Nav.urlSeg.length > 1) { Feed.currentFeed = decodeURI(Nav.urlSeg[1]); } else { Feed.currentFeed = ""; }
+		if(!Forum.schema[Feed.currentFeed]) { Feed.currentFeed = ""; }
 		
 		// Asynchronous Load
 		Forum.load();
+		
+		// Register the Auto-Load mechanics:
+		window.addEventListener("scroll", Forum.autoLoad);
 	}
 }
