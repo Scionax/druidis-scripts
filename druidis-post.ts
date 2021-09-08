@@ -191,9 +191,9 @@ abstract class PostPage {
 	static clearForm() {
 		
 		// Reset Input Fields
-		const submitElement: HTMLInputElement = document.getElementById("postSubmit") as HTMLInputElement;
-		const urlElement: HTMLInputElement = document.getElementById("postUrl") as HTMLInputElement;
-		const forumElement: HTMLInputElement = document.getElementById("postForum") as HTMLInputElement;
+		const submitElement: HTMLInputElement = document.getElementById("extSubmit") as HTMLInputElement;
+		const urlElement: HTMLInputElement = document.getElementById("extUrl") as HTMLInputElement;
+		const forumElement: HTMLInputElement = document.getElementById("extForum") as HTMLInputElement;
 		
 		urlElement.value = "";
 		forumElement.value = "";
@@ -203,10 +203,11 @@ abstract class PostPage {
 	}
 	
 	// Populate the Forum Selection Input
-	static populateForumSelect() {
-		const sel: HTMLSelectElement = document.getElementById("postForum") as HTMLSelectElement;
+	static populateForumSelect(selectId: string) {
+		const sel: HTMLSelectElement = document.getElementById(selectId) as HTMLSelectElement;
 		
 		for (const [feed, forums] of Object.entries(Feed.schema)) {
+			if(feed === "Home") { continue; }
 			
 			const option = document.createElement("option") as HTMLOptionElement;
 			option.value = feed;
@@ -224,55 +225,94 @@ abstract class PostPage {
 	}
 	
 	static initialize() {
-		PostPage.populateForumSelect();
+		PostPage.populateForumSelect("extForum");
+		PostPage.populateForumSelect("intForum");
 		
-		const postUrl = document.getElementById("postUrl") as HTMLInputElement;
-		const postSubmit = document.getElementById("postSubmit") as HTMLInputElement;
+		const extUrl = document.getElementById("extUrl") as HTMLInputElement;
+		const extSubmit = document.getElementById("extSubmit") as HTMLInputElement;
+		const intSubmit = document.getElementById("intSubmit") as HTMLInputElement;
 		
-		postUrl.addEventListener("click", () => { postUrl.value = ""; });
+		extUrl.addEventListener("click", () => { extUrl.value = ""; });
 		
-		postUrl.addEventListener("paste", () => {
+		extUrl.addEventListener("paste", () => {
 			
 			// We need a timeout here, since we actually want to check AFTER the paste event.
 			setTimeout(function() {
-				const urlInput = document.getElementById("postUrl") as HTMLInputElement;
-				const urlInfo = new URL(urlInput.value);
+				const elUrl = document.getElementById("extUrl") as HTMLInputElement;
+				const urlInfo = new URL(elUrl.value);
 				try {
 					if(urlInfo.pathname !== "/") {
-						OpenGraph.fetchData(urlInput.value);
+						OpenGraph.fetchData(elUrl.value);
 					}
 				} catch {
-					console.error("Unable to make a URL.", urlInput.value);
+					console.error("Unable to make a URL.", elUrl.value);
 				}
 			}, 10);
 		});
 		
-		postSubmit.addEventListener("click", async () => {
-			if(!API.url) { console.error("Unable to post. `API.url` is not set."); return; }
-			
-			const submitElement = postSubmit as HTMLInputElement;
+		extSubmit.addEventListener("click", async () => {
+			const submitElement = extSubmit as HTMLInputElement;
 			
 			// Prevent re-submissions.
 			if(submitElement.value !== "Submit Post") { return; }
 			
 			// Make sure there is content to submit:
-			const urlElement = document.getElementById("postUrl") as HTMLInputElement;
-			const forumElement = document.getElementById("postForum") as HTMLSelectElement;
+			const urlElement = document.getElementById("extUrl") as HTMLInputElement;
+			const forumElement = document.getElementById("extForum") as HTMLSelectElement;
 			
-			if(!urlElement.value) { alert("Must provide a URL."); return; }
-			if(!forumElement.value) { alert("Must select a forum to post to."); return; }
+			Alerts.error(!urlElement.value, "Must provide a URL.", true);
+			Alerts.error(!forumElement.value, "Must select a forum to post to.");
 			
-			// Make sure the post content is loaded:
-			if(!OpenGraph.postData) { alert("Submission must contain a valid post."); return; }
-			if(!OpenGraph.postData.title) { alert("Requires a title."); return; }
-			if(!OpenGraph.postData.origImg) { alert("Requires a valid image."); return; }
-			if(!OpenGraph.postData.w || !OpenGraph.postData.h) { alert("Error: The system failed to identify image width and height."); return; }
+			// Make sure the OpenGraph post content is loaded:
+			if(OpenGraph.postData) {
+				Alerts.error(!OpenGraph.postData.title, "The URL provided did not return a valid title.");
+				Alerts.error(!OpenGraph.postData.origImg, "The URL provided did not return a valid image.");
+				if(OpenGraph.postData.origImg && (!OpenGraph.postData.w || !OpenGraph.postData.h)) {
+					Alerts.error(true, "Error: The system failed to identify image width and height.");
+				}
+			} else {
+				if(urlElement.value) { Alerts.error(true, "The URL provided has not returned valid OpenGraph data. You may need a Custom Post."); }
+			}
 			
-			// Make sure the forum is valid.
-			if(!Forum.schema || !Forum.schema[forumElement.value]) { alert("Error: The forum selected is considered invalid."); return; }
+			if(Alerts.hasAlerts()) { Alerts.displayAlerts(); return; }
 			
 			// Assign the forum to our post content:
 			OpenGraph.postData.forum = forumElement.value;
+			
+			submitElement.value = "Submitting...";
+			
+			// Submit Content to API
+			const json = await API.callAPI("/post", OpenGraph.postData as unknown as Record<string, unknown>);
+			
+			Alerts.error(!json, "Error: Post submission response was empty or invalid.", true);
+			if(Alerts.hasAlerts()) { Alerts.displayAlerts(); return; }
+			
+			// Clear All Submission Contenet
+			PostPage.clearForm();
+			
+			console.log(json);
+		});
+		
+		intSubmit.addEventListener("click", async () => {
+			const submitElement = intSubmit as HTMLInputElement;
+			
+			// Prevent re-submissions.
+			if(submitElement.value !== "Submit Post") { return; }
+			
+			// Make sure there is content to submit:
+			const elTitle = document.getElementById("intTitle") as HTMLInputElement;
+			const elContent = document.getElementById("intContent") as HTMLInputElement;
+			const elForum = document.getElementById("intForum") as HTMLSelectElement;
+			
+			Alerts.error(!elTitle.value, "Must provide a title.", true);
+			Alerts.error(elTitle.value.length > 120, "Title cannot exceed 120 characters.");
+			Alerts.error(elContent.value.length > 250, "Summary cannot exceed 250 characters.");
+			Alerts.error(!elForum.value, "Must select a forum to post to.");
+			
+			if(Alerts.hasAlerts()) { Alerts.displayAlerts(); return; }
+			
+			// Make sure the forum is valid.
+			if(!Forum.schema || !Forum.schema[elForum.value]) { alert("Error: The forum selected is considered invalid."); return; }
 			
 			submitElement.value = "Submitting...";
 			
@@ -324,6 +364,7 @@ abstract class PostPage {
 	}
 	
 	static uploadFile(file: File) {
+		console.log("TRYING TO UPLOAD... MUST COMPLETE FUNCTION...");
 		const url = 'YOUR URL HERE';
 		const form = new FormData();
 		
