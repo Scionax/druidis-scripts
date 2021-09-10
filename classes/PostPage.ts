@@ -1,9 +1,10 @@
 import Alerts from "./Alerts.ts";
 import API from "./API.ts";
+import Dom from "./Dom.ts";
 import Feed from "./Feed.ts";
 import Forum from "./Forum.ts";
+import MainSection from "./MainSection.ts";
 import OpenGraph from "./OpenGraph.ts";
-import Webpage from "./Web.ts";
 
 export default abstract class PostPage {
 	static clearForm() {
@@ -17,7 +18,7 @@ export default abstract class PostPage {
 		forumElement.value = "";
 		submitElement.value = "Submit Post";
 		
-		Webpage.clearBlockFromMain("main-contain");
+		MainSection.clearBlock("main-contain");
 	}
 	
 	// Populate the Forum Selection Input
@@ -203,7 +204,7 @@ export default abstract class PostPage {
 			const img = document.createElement('img') as HTMLImageElement;
 			img.src = reader.result as string;
 			const gal = document.getElementById("gallery") as HTMLElement;
-			Webpage.setElement(gal, img);
+			Dom.setElement(gal, img);
 		}
 	}
 }

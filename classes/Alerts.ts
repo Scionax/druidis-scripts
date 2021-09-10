@@ -1,4 +1,4 @@
-import { createElement } from "./Dom.ts";
+import Dom from "./Dom.ts";
 
 export default class Alerts {
 	
@@ -34,7 +34,7 @@ export default class Alerts {
 			
 			// Check if there is an alert box. If so, post alerts.
 			if(isAlertBox) {
-				const alert = createElement("div", {"class": "alert alert-info"});
+				const alert = Dom.createElement("div", {"class": "alert alert-info"});
 				alert.innerHTML = Alerts.info[i];
 				info.appendChild(alert);
 			}
@@ -48,7 +48,7 @@ export default class Alerts {
 			
 			// Check if there is an alert box. If so, post alerts.
 			if(isAlertBox) {
-				const alert = createElement("div", {"class": "alert alert-fail"});
+				const alert = Dom.createElement("div", {"class": "alert alert-fail"});
 				alert.innerHTML = Alerts.errors[i];
 				info.appendChild(alert);
 			}

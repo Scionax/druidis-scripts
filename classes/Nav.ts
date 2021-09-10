@@ -1,8 +1,8 @@
 import Account from "./Account.ts";
 import Feed from "./Feed.ts";
 import Forum from "./Forum.ts";
+import MainSection from "./MainSection.ts";
 import PostPage from "./PostPage.ts";
-import Webpage from "./Web.ts";
 
 export default class Nav {
 	
@@ -50,7 +50,7 @@ export default class Nav {
 		const base = Nav.urlSeg[0];
 		
 		// Clear the Main Section (if we're running an inner-load)
-		if(Nav.innerLoad) { Webpage.clearMainSection(); }
+		if(Nav.innerLoad) { MainSection.clearAll(); }
 		
 		if(base === "") { Feed.initialize(); /* Home Page */ }
 		else if(base === "forum" && Nav.urlSeg[1]) { Forum.initialize(); }
@@ -58,7 +58,7 @@ export default class Nav {
 		
 		// Load standard pages. Run any special functions, if applicable.
 		else if(Nav.innerLoad) {
-			Nav.loadInnerHtml().then(() => {
+			MainSection.loadInnerHtml().then(() => {
 				if(Nav.pageLoad[Nav.urlPathname]) { Nav.pageLoad[Nav.urlPathname](); }
 			});
 		}
@@ -66,49 +66,6 @@ export default class Nav {
 		else {
 			if(Nav.pageLoad[Nav.urlPathname]) { Nav.pageLoad[Nav.urlPathname](); }
 		}
-	}
-	
-	static async loadInnerHtml() {
-		
-		// Check if we've met the cache limit.
-		const lastInner = Number(localStorage.getItem(`lastCache:${Nav.urlPathname}`)) || 0;
-		
-		if(Nav.loadDate - lastInner > Nav.cacheStatic) {
-			console.log(`Clearing stale data on ${Nav.urlPathname}`);
-			localStorage.removeItem(`html:${Nav.urlPathname}`);
-			localStorage.setItem(`lastCache:${Nav.urlPathname}`, Nav.loadDate.toString())
-		}
-		
-		// Check if localStorage has the data to overwrite.
-		else {
-			const innerHtml = localStorage.getItem(`html:${Nav.urlPathname}`);
-			
-			if(innerHtml) {
-				Webpage.setElement(document.getElementById("main-section") as HTMLElement, innerHtml);
-				return;
-			}
-		}
-		
-		// Otherwise, retrieve inner web content:
-		const response = await Webpage.getInnerHTML(Nav.urlPathname);
-		const contents = await response.text();
-		Webpage.setElement(document.getElementById("main-section") as HTMLElement, contents);
-		Nav.saveLocalHtml();
-	}
-	
-	static saveLocalHtml() {
-		
-		// if(Config.urlSegments[0] in ["about"]) {}
-		
-		// Check if the content is outdated (new version, etc).
-		
-		// If the content is outdated, delete it.
-		
-		// Make sure we haven't already saved the content.
-		
-		// Save the inner html locally.
-		const contents = Webpage.extractMainSection();
-		localStorage.setItem(`html:${Nav.urlPathname}`, contents);
 	}
 	
 	// sta = Static Cache (Default is 3 days), dyn = Dynamic Cache (Default is 5 minutes)

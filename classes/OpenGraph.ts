@@ -1,6 +1,6 @@
 import API from "./API.ts";
+import MainSection from "./MainSection.ts";
 import { buildPost, PostData } from "./Post.ts";
-import Webpage from "./Web.ts";
 
 export default abstract class OpenGraph {
 	
@@ -46,8 +46,8 @@ export default abstract class OpenGraph {
 			const feedElement = buildPost(OpenGraph.postData);
 			
 			// Attach Created Elements to Feed Section
-			Webpage.clearBlockFromMain("main-contain");
-			Webpage.appendToMain(feedElement);
+			MainSection.clearBlock("main-contain");
+			MainSection.append(feedElement);
 		}
 	}
 	

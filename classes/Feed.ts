@@ -1,7 +1,7 @@
 import API from "./API.ts";
+import MainSection from "./MainSection.ts";
 import Nav from "./Nav.ts";
 import { buildPost, PostData } from "./Post.ts";
-import Webpage from "./Web.ts";
 
 export default abstract class Feed {
 	
@@ -90,7 +90,7 @@ export default abstract class Feed {
 				
 				// If the feed tag has changed, we can clear the old data.
 				if(tag !== resp.tag) {
-					Webpage.clearMainSection();
+					MainSection.clearMainSection();
 					window.localStorage.setItem(`posts:${feed}`, `{}`);
 				}
 				
@@ -130,7 +130,7 @@ export default abstract class Feed {
 		for (const [_key, post] of pData) {
 			if(!post.id) { continue; }
 			const postElement = buildPost(post);
-			Webpage.appendToMain(postElement);
+			MainSection.appendToMain(postElement);
 		}
 	}
 	

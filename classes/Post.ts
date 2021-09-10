@@ -1,4 +1,4 @@
-import { createElement } from "./Dom.ts";
+import Dom from "./Dom.ts";
 import Forum from "./Forum.ts";
 
 export interface PostData {
@@ -22,14 +22,14 @@ export function buildPost(post: PostData, isFeed = false) {
 	// --------------------- //
 	
 	// Feed Icon
-	const feedIconImg = createElement("amp-img", {"width": "48", "height": "48", "src": `/public/images/logo/logo-48.png`});
-	const feedIcon = createElement("div", {"class": "tray-icon"}, [feedIconImg]);
+	const feedIconImg = Dom.createElement("amp-img", {"width": "48", "height": "48", "src": `/public/images/logo/logo-48.png`});
+	const feedIcon = Dom.createElement("div", {"class": "tray-icon"}, [feedIconImg]);
 	
 	// Feed Header
-	const feedHeaderTitle = createElement("div", {"class": "h3"});
+	const feedHeaderTitle = Dom.createElement("div", {"class": "h3"});
 	feedHeaderTitle.innerHTML = "Author Name or Title";
 	
-	const feedHeaderSubNote = createElement("div", {"class": "note2"});
+	const feedHeaderSubNote = Dom.createElement("div", {"class": "note2"});
 	
 	try {
 		const urlInfo = new URL(post.url);
@@ -38,16 +38,16 @@ export function buildPost(post: PostData, isFeed = false) {
 		// Do nothing
 	}
 	
-	const feedHeader = createElement("div", {"class": "tray-mid"}, [feedHeaderTitle, feedHeaderSubNote]);
+	const feedHeader = Dom.createElement("div", {"class": "tray-mid"}, [feedHeaderTitle, feedHeaderSubNote]);
 	
 	// Feed Menu
-	const feedMenuInner = createElement("div", {"class": "tray-menu-inner"});
+	const feedMenuInner = Dom.createElement("div", {"class": "tray-menu-inner"});
 	feedMenuInner.innerHTML = "&#8226;&#8226;&#8226;";
 	
-	const feedMenu = createElement("div", {"class": "tray-menu"}, [feedMenuInner]);
+	const feedMenu = Dom.createElement("div", {"class": "tray-menu"}, [feedMenuInner]);
 	
 	// Feed Top (full top line; includes Icon, Header, Menu)
-	const feedTop = createElement("div", {"class": "tray"}, [feedIcon, feedHeader, feedMenu]);
+	const feedTop = Dom.createElement("div", {"class": "tray"}, [feedIcon, feedHeader, feedMenu]);
 	
 	// ----- Left Section ----- //
 	
@@ -58,7 +58,7 @@ export function buildPost(post: PostData, isFeed = false) {
 		let feedImageImg;
 		
 		if(post.origImg) {
-			feedImageImg = createElement("amp-img", {
+			feedImageImg = Dom.createElement("amp-img", {
 				"layout": "responsive", "max-width": `${post.w}`, "width": `${post.w}`, "height": `${post.h}`,
 				"src": post.origImg
 			});
@@ -66,59 +66,59 @@ export function buildPost(post: PostData, isFeed = false) {
 			const imgPage = Math.ceil(post.id/1000);
 			const imgPath = `${post.forum}/${imgPage}/${post.img}`;
 			
-			feedImageImg = createElement("amp-img", {
+			feedImageImg = Dom.createElement("amp-img", {
 				"layout": "responsive", "max-width": `${post.w}`, "width": `${post.w}`, "height": `${post.h}`,
 				"src": `https://us-east-1.linodeobjects.com/druidis-cdn/${imgPath}`
 			});
 		}
 		
 		if(feedImageImg) {
-			const feedImageInner = createElement("div", {"class": "feed-image-inner"}, [feedImageImg]);
-			const feedImage = createElement("div", {"class": "feed-image"}, [feedImageInner]);
+			const feedImageInner = Dom.createElement("div", {"class": "feed-image-inner"}, [feedImageImg]);
+			const feedImage = Dom.createElement("div", {"class": "feed-image"}, [feedImageInner]);
 			
 			// Feed Link (Applies to Media & Title + Content)
-			const feedHov = createElement("a", {"class": "feed-hov", "href": post.url}, [feedImage]);
+			const feedHov = Dom.createElement("a", {"class": "feed-hov", "href": post.url}, [feedImage]);
 			feedWrapChildren.push(feedHov);
 		}
 	}
 	
 	// Create Feed Wrap (not including "Extra")
-	const feedWrap = createElement("div", {"class": "half-wrap"}, feedWrapChildren);
+	const feedWrap = Dom.createElement("div", {"class": "half-wrap"}, feedWrapChildren);
 	
 	// ----- Right Section ----- //
 	
 	// "Extra" Body
-	const extraTitle = createElement("h2");
+	const extraTitle = Dom.createElement("h2");
 	extraTitle.innerHTML = post.title;
 	
-	const extraContent = createElement("p");
+	const extraContent = Dom.createElement("p");
 	extraContent.innerHTML = post.content;
 	
-	const extraBody = createElement("div", {"class": "extra-body"}, [extraTitle, extraContent]);
-	const extraWrapLink = createElement("a", {"class": "feed-hov", href: post.url}, [extraBody]);
+	const extraBody = Dom.createElement("div", {"class": "extra-body"}, [extraTitle, extraContent]);
+	const extraWrapLink = Dom.createElement("a", {"class": "feed-hov", href: post.url}, [extraBody]);
 	
 	// Link List
-	const linkList = createElement("div", {"class": "linkList"});
+	const linkList = Dom.createElement("div", {"class": "linkList"});
 	
 	// Link the feed in the breadcrumb.
 	if(post.forum && !isFeed) {
 		const feedName = Forum.schema[post.forum];
-		const crumb = createElement("a", {"class": "link", "href": `/feed/${feedName}`});
+		const crumb = Dom.createElement("a", {"class": "link", "href": `/feed/${feedName}`});
 		crumb.innerHTML = feedName;
 		linkList.appendChild(crumb);
 	} else if(post.forum && isFeed) {
-		const crumb = createElement("a", {"class": "link", "href": `/forum/${post.forum}`});
+		const crumb = Dom.createElement("a", {"class": "link", "href": `/forum/${post.forum}`});
 		crumb.innerHTML = post.forum;
 		linkList.appendChild(crumb);
 	}
 	
-	const extraFoot = createElement("div", {"class": "extra-foot"}, [linkList]);
+	const extraFoot = Dom.createElement("div", {"class": "extra-foot"}, [linkList]);
 	
 	// Create "Extra" Wrapper
-	const extraWrap = createElement("div", {"class": "extra-wrap"}, [extraWrapLink, extraFoot]);
+	const extraWrap = Dom.createElement("div", {"class": "extra-wrap"}, [extraWrapLink, extraFoot]);
 	
 	// Fulfill Post Container
-	const feedContainer = createElement("div", {"class": "main-contain"}, [feedWrap, extraWrap]);
+	const feedContainer = Dom.createElement("div", {"class": "main-contain"}, [feedWrap, extraWrap]);
 	
 	return feedContainer;
 }
