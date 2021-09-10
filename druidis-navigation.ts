@@ -1,3 +1,5 @@
+import Account from "./classes/Account.ts";
+import Nav from "./classes/Nav.ts";
 
 document.addEventListener("click", (e: Event) => {
 	if(!e.target) { return; }
@@ -6,7 +8,7 @@ document.addEventListener("click", (e: Event) => {
 	// Check if a button was clicked.
 	const inputOrigin = e.target.closest("input");
 	if(inputOrigin && inputOrigin.type === "submit") { return runSubmitPress(inputOrigin); }
-	
+
 	// Check if a link was clicked, and if it provides a valid URL. If not, return.
 	const origin = e.target.closest("a");
 	if(!origin || !origin.href) { return; }

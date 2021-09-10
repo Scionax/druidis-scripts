@@ -1,5 +1,9 @@
+import Alerts from "./Alerts.ts";
+import API from "./API.ts";
+import Nav from "./Nav.ts";
+import Webpage from "./Web.ts";
 
-abstract class Account {
+export default abstract class Account {
 	static id = 0;
 	
 	static initialize() {
@@ -122,5 +126,3 @@ abstract class Account {
 		if(Alerts.hasAlerts()) { Alerts.displayAlerts(); }
 	}
 }
-
-Account.initialize();

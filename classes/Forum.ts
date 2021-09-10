@@ -11,7 +11,11 @@
 		- It will only search for IDs that are not already cached.
 */
 
-abstract class Forum {
+import Feed from "./Feed.ts";
+import Nav from "./Nav.ts";
+import { PostData } from "./Post.ts";
+
+export default abstract class Forum {
 	
 	static schema: { [forum: string]: string } = {"Business":"News","Economic":"News","Environment":"News","Legal":"News","Politics":"News","Social Issues":"News","World News":"News","Education":"Informative","History":"Informative","Science":"Informative","Technology":"Informative","Books":"Entertainment","Gaming":"Entertainment","Movies":"Entertainment","Music":"Entertainment","People":"Entertainment","Shows":"Entertainment","Sports":"Entertainment","Tabletop Games":"Entertainment","Virtual Reality":"Entertainment","Fashion":"Lifestyle","Fitness":"Lifestyle","Food":"Lifestyle","Health":"Lifestyle","Recipes":"Lifestyle","Relationships":"Lifestyle","Social Life":"Lifestyle","Travel":"Lifestyle","Ask":"Fun","Cosplay":"Fun","Cute":"Fun","Forum Games":"Fun","Funny":"Fun","Artwork":"Creative","Crafts":"Creative","Design":"Creative","Writing":"Creative"};
 	
@@ -34,7 +38,7 @@ abstract class Forum {
 			query = (idHigh > -1) ? `?h=${idHigh}` : "";
 		}
 		
-		const response = await Feed.fetchPosts(`/forum/${forum}${query}`);
+		const response = await Feed.fetchPosts(`forum/${forum}${query}`);
 		return await response.json();
 	}
 	

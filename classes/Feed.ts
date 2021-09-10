@@ -1,5 +1,9 @@
+import API from "./API.ts";
+import Nav from "./Nav.ts";
+import { buildPost, PostData } from "./Post.ts";
+import Webpage from "./Web.ts";
 
-abstract class Feed {
+export default abstract class Feed {
 	
 	static lastAutoload = 0;
 	static currentFeed: string;
@@ -7,7 +11,7 @@ abstract class Feed {
 	
 	static async fetchFeedPosts(feed: string, tag = "", pos = 0): Promise<{ tag: string, start: string, end: string, posts: PostData[]}> {
 		const query = tag && pos ? `?tag=${tag}&p=${pos}` : '';
-		const response = await Feed.fetchPosts(`/feed/${feed}${query}`);
+		const response = await Feed.fetchPosts(`feed/${feed}${query}`);
 		return await response.json();
 	}
 	
@@ -41,7 +45,7 @@ abstract class Feed {
 		const cachedPosts = Feed.getCachedPosts(feed);
 		const rawPosts = postResponse ? postResponse : [];
 		
-		if(!Array.isArray(rawPosts)) { return {}; }
+		if(!Array.isArray(rawPosts)) { return cachedPosts; }
 		
 		// Loop through all entries in the post data, and append to cached posts.
 		for(let i = 0; i < rawPosts.length; i++) {
