@@ -15,43 +15,27 @@ export default class Alerts {
 	}
 	
 	static displayAlerts() {
-		
 		if(!Alerts.hasAlerts()) { return; }
 		
-		const info = document.getElementById("alertBox") as HTMLDivElement;
+		const box = document.getElementById("alertBox") as HTMLDivElement;
+		const isAlertBox = box ? true : false;
 		
-		const isAlertBox = info ? true : false;
+		if(!isAlertBox) { return; }
 		
-		if(isAlertBox) {
-			info.innerHTML = "";
-		}
+		box.innerHTML = "";
 		
 		// Display Info Alerts
 		for(let i = 0; i < Alerts.info.length; i++) {
-			
-			// Post all alerts in the console.
-			console.log(Alerts.info[i]);
-			
-			// Check if there is an alert box. If so, post alerts.
-			if(isAlertBox) {
-				const alert = Dom.createElement("div", {"class": "alert alert-info"});
-				alert.innerHTML = Alerts.info[i];
-				info.appendChild(alert);
-			}
+			const alert = Dom.createElement("div", {"class": "alert alert-info"});
+			alert.innerHTML = Alerts.info[i];
+			box.appendChild(alert);
 		}
 		
 		// Display Errors
 		for(let i = 0; i < Alerts.errors.length; i++) {
-			
-			// Post all alerts in the console.
-			console.log(Alerts.errors[i]);
-			
-			// Check if there is an alert box. If so, post alerts.
-			if(isAlertBox) {
-				const alert = Dom.createElement("div", {"class": "alert alert-fail"});
-				alert.innerHTML = Alerts.errors[i];
-				info.appendChild(alert);
-			}
+			const alert = Dom.createElement("div", {"class": "alert alert-fail"});
+			alert.innerHTML = Alerts.errors[i];
+			box.appendChild(alert);
 		}
 	}
 }

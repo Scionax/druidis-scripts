@@ -1,11 +1,11 @@
 import Account from "./classes/Account.ts";
-import API from "./classes/API.ts";
-import MainSection from "./classes/MainSection.ts";
+import Alerts from "./classes/Alerts.ts";
+import Config from "./classes/Config.ts";
 import Nav from "./classes/Nav.ts";
 
 
-API.initialize();
-MainSection.initialize();
-Nav.initialize();
+Config.initialize();
+Alerts.purgeAlerts();
+Nav.updateURL(false);
 Nav.runPageUpdate();
 Account.initialize();

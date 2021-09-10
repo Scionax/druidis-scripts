@@ -1,11 +1,11 @@
-import API from "./API.ts";
+import Config from "./Config.ts";
 import MainSection from "./MainSection.ts";
 import Nav from "./Nav.ts";
 import { buildPost, PostData } from "./Post.ts";
 
 export default abstract class Feed {
 	
-	static lastAutoload = 0;
+	private static lastAutoload = 0;
 	static currentFeed: string;
 	static schema: { [forum: string]: string[] } = {"Entertainment":["Shows","Movies","People","Sports","Gaming","Virtual Reality","Tabletop Games","Music","Books"],"News":["World News","Social Issues","Politics","Environment","Business","Economic","Legal"],"Informative":["Technology","Science","Education","History"],"Lifestyle":["Fashion","Food","Health","Fitness","Social Life","Relationships","Recipes","Travel"],"Fun":["Funny","Ask","Cute","Forum Games","Cosplay"],"Creative":["Crafts","Artwork","Design","Writing"],"Home":["Shows","Movies","People","Sports","Gaming","Virtual Reality","Tabletop Games","Music","Books","World News","Social Issues","Environment","Politics","Business","Economic","Legal","Technology","Science","Education","History","Fashion","Food","Health","Fitness","Social Life","Relationships","Recipes","Travel","Funny","Cute","Ask","Cosplay","Forum Games","Crafts","Artwork","Design","Writing"]};
 	
@@ -18,9 +18,9 @@ export default abstract class Feed {
 	static async fetchPosts(call: string): Promise<Response> {
 		
 		console.log("--- Fetching Results ---");
-		console.log(`${API.url}/${call}`);
+		console.log(`${Config.url_api}/${call}`);
 		
-		return await fetch(`${API.url}/${call}`, { headers:{
+		return await fetch(`${Config.url_api}/${call}`, { headers:{
 			'Content-Type': 'application/json',
 			'Credentials': 'include', // Needed or Cookies will not be sent.
 			// 'Content-Type': 'application/x-www-form-urlencoded',
@@ -90,7 +90,7 @@ export default abstract class Feed {
 				
 				// If the feed tag has changed, we can clear the old data.
 				if(tag !== resp.tag) {
-					MainSection.clearMainSection();
+					MainSection.clearAll();
 					window.localStorage.setItem(`posts:${feed}`, `{}`);
 				}
 				
@@ -130,7 +130,7 @@ export default abstract class Feed {
 		for (const [_key, post] of pData) {
 			if(!post.id) { continue; }
 			const postElement = buildPost(post);
-			MainSection.appendToMain(postElement);
+			MainSection.append(postElement);
 		}
 	}
 	

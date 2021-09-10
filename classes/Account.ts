@@ -1,6 +1,6 @@
 import Alerts from "./Alerts.ts";
 import API from "./API.ts";
-import MainSection from "./MainSection.ts";
+import Config from "./Config.ts";
 import Nav from "./Nav.ts";
 
 export default abstract class Account {
@@ -43,8 +43,8 @@ export default abstract class Account {
 	}
 	
 	static logIn() {
-		if(Nav.local) { console.log(`Logged in with ID #${Account.id}.`); }
-		Nav.updateURL(true, MainSection.url, "Druidis");
+		if(Config.local) { console.log(`Logged in with ID #${Account.id}.`); }
+		Nav.updateURL(true, Config.url_web, "Druidis");
 		Nav.runPageUpdate();
 	}
 	

@@ -1,14 +1,6 @@
+import Config from "./Config.ts";
 
 export default class API {
-	
-	static url: string;					// URL to the API server; e.g. localhost/api, druidis.org/api, etc.
-	
-	static initialize() {
-		
-		// .url
-		if(location.hostname.indexOf("local") > -1) { API.url = `http://localhost/api`; }
-		else { API.url = `https://druidis.org/api`; }
-	}
 	
 	static async callAPI(path: string, data: Record<string, unknown> | null = null) {
 		const response: Response = data === null ? await API.callGetAPI(path) : await API.callPostAPI(path, data);
@@ -16,7 +8,7 @@ export default class API {
 	}
 	
 	private static async callPostAPI(path: string, data: Record<string, unknown>): Promise<Response> {
-		return await fetch(`${API.url}${path}`, {
+		return await fetch(`${Config.url_api}${path}`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -28,7 +20,7 @@ export default class API {
 	}
 	
 	private static async callGetAPI(path: string): Promise<Response> {
-		return await fetch(`${API.url}${path}`, {
+		return await fetch(`${Config.url_api}${path}`, {
 			headers: {
 				'Content-Type': 'application/json',
 				'Credentials': 'include', // Needed or Cookies will not be sent.

@@ -1,4 +1,4 @@
-import API from "./API.ts";
+import Config from "./Config.ts";
 import MainSection from "./MainSection.ts";
 import { buildPost, PostData } from "./Post.ts";
 
@@ -9,7 +9,7 @@ export default abstract class OpenGraph {
 	static async fetchData(url: string) {
 		
 		// Fetch the HTML from a given URL
-		const response = fetch(`${API.url}/data/html?url=${encodeURIComponent(url)}`, { headers:{
+		const response = fetch(`${Config.url_api}/data/html?url=${encodeURIComponent(url)}`, { headers:{
 			'Content-Type': 'application/json',
 			'Credentials': 'include', // Needed or Cookies will not be sent.
 			// 'Content-Type': 'application/x-www-form-urlencoded',

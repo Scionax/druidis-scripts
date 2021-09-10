@@ -1,17 +1,17 @@
-import Alerts from "./Alerts.ts";
+import Config from "./Config.ts";
 import Dom from "./Dom.ts";
 import Nav from "./Nav.ts";
 
 export default class MainSection {
 	
-	static url: string;					// URL to the web server; e.g. localhost, druidis.org, etc.
+	static get(): HTMLElement { return document.getElementById("main-section") as HTMLElement; }
 	
 	static async loadInnerHtml() {
 		
 		// Check if the cache has gone stale. If so, clear it.
 		const lastInner = Number(localStorage.getItem(`lastCache:${Nav.urlPathname}`)) || 0;
 		
-		if(Nav.loadDate - lastInner > Nav.cacheStatic) {
+		if(Nav.loadDate - lastInner > Config.cacheStatic) {
 			console.log(`Clearing stale data on ${Nav.urlPathname}`);
 			localStorage.removeItem(`html:${Nav.urlPathname}`);
 			localStorage.setItem(`lastCache:${Nav.urlPathname}`, Nav.loadDate.toString())
@@ -22,7 +22,7 @@ export default class MainSection {
 			const innerHtml = localStorage.getItem(`html:${Nav.urlPathname}`);
 			
 			if(innerHtml) {
-				Dom.setElement(document.getElementById("main-section") as HTMLElement, innerHtml);
+				Dom.setElement(MainSection.get(), innerHtml);
 				return;
 			}
 		}
@@ -30,7 +30,7 @@ export default class MainSection {
 		// Otherwise, fetch inner web content:
 		const response = await MainSection.fetchInner(Nav.urlPathname);
 		const contents = await response.text();
-		Dom.setElement(document.getElementById("main-section") as HTMLElement, contents);
+		Dom.setElement(MainSection.get(), contents);
 		MainSection.saveLocalHtml();
 	}
 	
@@ -50,16 +50,16 @@ export default class MainSection {
 	}
 	
 	static clearAll() {
-		Dom.clearElement(document.getElementById("main-section") as HTMLElement);
+		Dom.clearElement(MainSection.get());
 	}
 	
 	static append(el: HTMLElement) {
-		const mainSection = document.getElementById("main-section") as HTMLElement;
+		const mainSection = MainSection.get();
 		if(mainSection !== null) { mainSection.appendChild(el); }
 	}
 	
 	static clearBlock(blockId: string) {
-		const mainSection = document.getElementById("main-section") as HTMLElement;
+		const mainSection = MainSection.get();
 		
 		for(let i = mainSection.children.length - 1; i >= 0; i--) {
 			const child = mainSection.children[i];
@@ -70,26 +70,17 @@ export default class MainSection {
 	}
 	
 	static exportInnerHTML(): string {
-		const mainSection = document.getElementById("main-section") as HTMLElement;
+		const mainSection = MainSection.get();
 		return mainSection.innerHTML;
 	}
 	
 	// Calls ONLY the inner page content, not the full page.
 	static async fetchInner(path: string): Promise<Response> {
-		return await fetch(`${MainSection.url}/page${path}`, {
+		return await fetch(`${Config.url_web}/page${path}`, {
 			headers: {
 				'Content-Type': 'text/html',
 				'Credentials': 'include', // Needed or Cookies will not be sent.
 			},
 		});
-	}
-	
-	static initialize() {
-		
-		Alerts.purgeAlerts();
-		
-		// Set .url
-		if(location.hostname.indexOf("local") > -1) { MainSection.url = `http://localhost`; }
-		else { MainSection.url = `https://druidis.org`; }
 	}
 }

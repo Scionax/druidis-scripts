@@ -13,25 +13,11 @@ export default class Nav {
 	static innerLoad: boolean;		// Indicates that only the inner html needs to be loaded. Full page already loaded.
 	static loadDate: number;		// The timestamp that the load occurred at.
 	
-	// Settings
-	static local: boolean;			// Indicates that we're on localhost (or dev system).
-	static cacheStatic: number;		// [Required for Local] Duration for caching static content (like about pages).
-	static cacheDynamic: number;	// [Required for Local] Duration for caching dynamic content (like feeds).
-	
 	// Special functions to run when a specific page loads:
 	static pageLoad: { [id: string]: any } = {
 		"/user/logout": () => { Account.logOut() },
 		"/post": () => { PostPage.initialize() }
 	};
-	
-	static initialize() {
-		
-		// Local Settings
-		Nav.local = location.hostname.indexOf("local") > -1 ? true : false;
-		if(Nav.local) { Nav.setCache(20, 20); } else { Nav.setCache(); }
-		
-		Nav.updateURL(false);
-	}
 	
 	static updateURL(innerLoad: boolean, newUrl = "", newTitle = "", movedBack = false) {
 		if(newUrl && !movedBack) { history.pushState(null, newTitle, newUrl); }
@@ -68,12 +54,6 @@ export default class Nav {
 		}
 	}
 	
-	// sta = Static Cache (Default is 3 days), dyn = Dynamic Cache (Default is 5 minutes)
-	static setCache(sta = 3600 * 24 * 3, dyn = 60 * 5) {
-		Nav.cacheStatic = sta;
-		Nav.cacheDynamic = dyn;
-	}
-	
-	static mainHeight() { return (document.getElementById("main-section") as HTMLElement).scrollHeight; }
+	static mainHeight() { return MainSection.get().scrollHeight; }
 	static scrollDist() { return Nav.mainHeight() - window.scrollY - window.innerHeight; }
 }

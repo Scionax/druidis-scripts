@@ -1,4 +1,6 @@
 import Account from "./classes/Account.ts";
+import Config from "./classes/Config.ts";
+import MainSection from "./classes/MainSection.ts";
 import Nav from "./classes/Nav.ts";
 
 document.addEventListener("click", (e: Event) => {
@@ -27,12 +29,12 @@ window.addEventListener("popstate", (e: PopStateEvent) => {
 // When a form submits (such as pressting enter), instead "click" the submission, which will fire the correct javascript.
 window.addEventListener("submit", (e: Event) => {
 	e.preventDefault();
-	const submit = document.getElementById("main-section")?.querySelector(`input[type="submit"]`);
+	const submit = MainSection.get()?.querySelector(`input[type="submit"]`);
 	if(submit instanceof HTMLInputElement) { submit.click(); }
 });
 
 function runSubmitPress(inputOrigin: HTMLInputElement) {
-	if(Nav.local) { console.log(`Global click on ${inputOrigin.id}.`); }
+	if(Config.local) { console.log(`Global click on ${inputOrigin.id}.`); }
 	switch(inputOrigin.id) {
 		case "loginSubmit": return Account.submitLogin(inputOrigin);
 		case "signUpSubmit": return Account.submitSignIn(inputOrigin);
