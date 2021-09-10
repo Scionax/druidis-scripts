@@ -1,12 +1,13 @@
-import Alerts from "./Alerts.ts";
-import API from "./API.ts";
-import Dom from "./Dom.ts";
-import Feed from "./Feed.ts";
-import Forum from "./Forum.ts";
-import MainSection from "./MainSection.ts";
-import OpenGraph from "./OpenGraph.ts";
+import Alerts from "../classes/Alerts.ts";
+import API from "../classes/API.ts";
+import Dom from "../classes/Dom.ts";
+import Feed from "../classes/Feed.ts";
+import Forum from "../classes/Forum.ts";
+import MainSection from "../classes/MainSection.ts";
+import OpenGraph from "../classes/OpenGraph.ts";
 
 export default abstract class PostPage {
+	
 	static clearForm() {
 		
 		// Reset Input Fields

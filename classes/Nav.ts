@@ -2,7 +2,7 @@ import Account from "./Account.ts";
 import Feed from "./Feed.ts";
 import Forum from "./Forum.ts";
 import MainSection from "./MainSection.ts";
-import PostPage from "./PostPage.ts";
+import PostPage from "../controllers/PostPage.ts";
 
 export default class Nav {
 	
