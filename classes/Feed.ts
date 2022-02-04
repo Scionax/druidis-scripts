@@ -41,10 +41,8 @@ export default abstract class Feed {
 		return {};
 	}
 	
-	static cachePosts(feed: string, postResponse: PostData[]): Record<string, PostData> {
-		const cachedPosts = Feed.getCachedPosts(feed);
+	static cachePosts(cachedPosts: Record<string, PostData>, feed: string, postResponse: PostData[]) {
 		const rawPosts = postResponse ? postResponse : [];
-		
 		if(!Array.isArray(rawPosts)) { return cachedPosts; }
 		
 		// Loop through all entries in the post data, and append to cached posts.
@@ -61,18 +59,16 @@ export default abstract class Feed {
 				window.localStorage.setItem(`posts:${feed}`, JSON.stringify(cachedPosts));
 			}
 		}
-		
-		return cachedPosts;
 	}
 	
 	static async load() {
 		if(!Feed.currentFeed) { return; }
-		await Feed.loadMore();
 		const cachedPosts = Feed.getCachedPosts(Feed.currentFeed);
+		await Feed.loadMore(cachedPosts);
 		Feed.displayPosts(Object.entries(cachedPosts));
 	}
 	
-	static async loadMore() {
+	static async loadMore(cachedPosts: Record<string, PostData>) {
 		const feed = Feed.currentFeed;
 		
 		// Determine what type of request to run based on any feed metadata we have:
@@ -82,30 +78,29 @@ export default abstract class Feed {
 		
 		// If we've reached the end of the feed, do not make any additional requests.
 		const willFetch = tag && pos === -1 ? false : true;
+		if(!willFetch) { return; }
 		
 		// Fetch recent feed data.
-		if(willFetch) {
-			try {
-				const resp = await Feed.fetchFeedPosts(feed, tag, pos + 1);
-				
-				// If the feed tag has changed, we can clear the old data.
-				if(tag !== resp.tag) {
-					MainSection.clearAll();
-					window.localStorage.setItem(`posts:${feed}`, `{}`);
-				}
-				
-				// Display Results
-				Feed.displayPosts(Object.entries(resp.posts));
-				
-				// Cache Results
-				Feed.cachePosts(feed, resp.posts);
-				
-				const p = Number(resp.start) > 0 && Number(resp.end) <= Number(resp.start) ? "-1" : resp.end as string;
-				window.localStorage.setItem(`feedMeta:${feed}`, `${resp.tag}:${p}`);
-				
-			} catch {
-				console.error(`Error with response in feed: ${feed}`)
+		try {
+			const resp = await Feed.fetchFeedPosts(feed, tag, pos + 1);
+			
+			// If the feed tag has changed, we can clear the old data.
+			if(tag !== resp.tag) {
+				MainSection.clearAll();
+				window.localStorage.setItem(`posts:${feed}`, `{}`);
 			}
+			
+			// Display Results
+			Feed.displayPosts(Object.entries(resp.posts));
+			
+			// Cache Results
+			Feed.cachePosts(cachedPosts, feed, resp.posts);
+			
+			const p = Number(resp.start) > 0 && Number(resp.end) <= Number(resp.start) ? "-1" : resp.end as string;
+			window.localStorage.setItem(`feedMeta:${feed}`, `${resp.tag}:${p}`);
+			
+		} catch {
+			console.error(`Error with response in feed: ${feed}`)
 		}
 	}
 	
@@ -137,7 +132,8 @@ export default abstract class Feed {
 	// Auto-Load more posts.
 	static autoLoad() {
 		if(!Feed.allowAutoLoad()) { return; }
-		Feed.loadMore();
+		const cachedPosts = Feed.getCachedPosts(Feed.currentFeed);
+		Feed.loadMore(cachedPosts);
 	}
 	
 	static initialize() {

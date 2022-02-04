@@ -2,7 +2,7 @@ import Account from "./Account.ts";
 import Feed from "./Feed.ts";
 import Forum from "./Forum.ts";
 import MainSection from "./MainSection.ts";
-import PostPage from "../controllers/PostPage.ts";
+import Script from "./Script.ts";
 
 export default class Nav {
 	
@@ -16,7 +16,8 @@ export default class Nav {
 	// Special functions to run when a specific page loads:
 	static pageLoad: { [id: string]: any } = {
 		"/user/logout": () => { Account.logOut() },
-		"/post": () => { PostPage.initialize() }
+		"/post": () => { Script.load("PostPage"); }
+		// "/post": () => { PostPage.initialize() }
 	};
 	
 	static updateURL(innerLoad: boolean, newUrl = "", newTitle = "", movedBack = false) {
@@ -41,6 +42,7 @@ export default class Nav {
 		if(base === "") { Feed.initialize(); /* Home Page */ }
 		else if(base === "forum" && Nav.urlSeg[1]) { Forum.initialize(); }
 		else if(base === "feed") { Feed.initialize(); }
+		else if(base === "admin") { Script.load("AdminPage"); }
 		
 		// Load standard pages. Run any special functions, if applicable.
 		else if(Nav.innerLoad) {

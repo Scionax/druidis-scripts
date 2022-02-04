@@ -5,6 +5,7 @@ import Feed from "../classes/Feed.ts";
 import Forum from "../classes/Forum.ts";
 import MainSection from "../classes/MainSection.ts";
 import OpenGraph from "../classes/OpenGraph.ts";
+import Script from "../classes/Script.ts";
 
 export default abstract class PostPage {
 	
@@ -41,6 +42,58 @@ export default abstract class PostPage {
 				option.text = ` - ${forums[i]}`;
 				sel.add(option);
 			}
+		}
+	}
+	
+	static dragPrep(e: Event) {
+		e.preventDefault();
+		e.stopPropagation();
+		return document.getElementById('dropArea') as HTMLElement;
+	}
+	
+	static dragEnter(e: DragEvent) { PostPage.dragPrep(e).classList.add('highlight'); }
+	static dragLeave(e: DragEvent) { PostPage.dragPrep(e).classList.remove('highlight'); }
+	static dragOver(e: DragEvent) { PostPage.dragPrep(e).classList.add('highlight'); }
+	
+	static drop(e: DragEvent) {
+		const area = PostPage.dragPrep(e);
+		area.classList.remove('highlight');
+		const dt = e.dataTransfer;
+		if(!dt) { return; }
+		const files = dt.files;
+		PostPage.handleFiles(files)
+	}
+	
+	static handleFiles(files: FileList) {
+		for (const [_k, file] of Object.entries(files)) {
+			PostPage.uploadFile(file);
+			PostPage.previewFile(file);
+		}
+	}
+	
+	static uploadFile(file: File) {
+		console.log("TRYING TO UPLOAD... MUST COMPLETE FUNCTION...");
+		const url = 'YOUR URL HERE';
+		const form = new FormData();
+		
+		form.set('file', file);
+		
+		// fetch(url, {
+		// 	method: 'POST',
+		// 	body: formData
+		// })
+		// .then(() => { /* Done. Inform the user */ })
+		// .catch(() => { /* Error. Inform the user */ })
+	}
+	
+	static previewFile(file: File) {
+		const reader = new FileReader();
+		reader.readAsDataURL(file);
+		reader.onloadend = function() {
+			const img = document.createElement('img') as HTMLImageElement;
+			img.src = reader.result as string;
+			const gal = document.getElementById("gallery") as HTMLElement;
+			Dom.setElement(gal, img);
 		}
 	}
 	
@@ -156,56 +209,6 @@ export default abstract class PostPage {
 		dropArea.addEventListener('dragover', (e) => PostPage.dragOver(e), false)
 		dropArea.addEventListener('drop', (e) => PostPage.drop(e), false)
 	}
-	
-	static dragPrep(e: Event) {
-		e.preventDefault();
-		e.stopPropagation();
-		return document.getElementById('dropArea') as HTMLElement;
-	}
-	
-	static dragEnter(e: DragEvent) { PostPage.dragPrep(e).classList.add('highlight'); }
-	static dragLeave(e: DragEvent) { PostPage.dragPrep(e).classList.remove('highlight'); }
-	static dragOver(e: DragEvent) { PostPage.dragPrep(e).classList.add('highlight'); }
-	
-	static drop(e: DragEvent) {
-		const area = PostPage.dragPrep(e);
-		area.classList.remove('highlight');
-		const dt = e.dataTransfer;
-		if(!dt) { return; }
-		const files = dt.files;
-		PostPage.handleFiles(files)
-	}
-	
-	static handleFiles(files: FileList) {
-		for (const [_k, file] of Object.entries(files)) {
-			PostPage.uploadFile(file);
-			PostPage.previewFile(file);
-		}
-	}
-	
-	static uploadFile(file: File) {
-		console.log("TRYING TO UPLOAD... MUST COMPLETE FUNCTION...");
-		const url = 'YOUR URL HERE';
-		const form = new FormData();
-		
-		form.set('file', file);
-		
-		// fetch(url, {
-		// 	method: 'POST',
-		// 	body: formData
-		// })
-		// .then(() => { /* Done. Inform the user */ })
-		// .catch(() => { /* Error. Inform the user */ })
-	}
-	
-	static previewFile(file: File) {
-		const reader = new FileReader();
-		reader.readAsDataURL(file);
-		reader.onloadend = function() {
-			const img = document.createElement('img') as HTMLImageElement;
-			img.src = reader.result as string;
-			const gal = document.getElementById("gallery") as HTMLElement;
-			Dom.setElement(gal, img);
-		}
-	}
 }
+
+Script.register("PostPage", PostPage.initialize);

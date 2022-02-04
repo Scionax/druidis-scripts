@@ -11,6 +11,7 @@
 		- It will only search for IDs that are not already cached.
 */
 
+import Config from "./Config.ts";
 import Feed from "./Feed.ts";
 import Nav from "./Nav.ts";
 import { PostData } from "./Post.ts";
@@ -62,7 +63,7 @@ export default abstract class Forum {
 		
 		let willFetch = false;
 		let scanType = 0; // 0 = new, 1 = asc, -1 = desc
-		let cachedPosts = Feed.getCachedPosts(forum);
+		const cachedPosts = Feed.getCachedPosts(forum);
 		
 		// Determine what type of request to run based on when the last "pull" was.
 		const lastPull = Number(window.localStorage.getItem(`lastPull:${forum}`)) || 0;
@@ -72,15 +73,17 @@ export default abstract class Forum {
 		if(idHigh === -1) { willFetch = true; }
 		
 		// If we haven't pulled in at least ten minutes, we'll make sure a new fetch happens.
-		if(willFetch === false && Nav.loadDate - lastPull > 600) {
+		if(willFetch === false && Nav.loadDate - lastPull > Config.cacheDynamic) {
 			willFetch = true;
 			scanType = 1;
+			console.log(`Haven't pulled in at least ten minutes. Forcing fetch.`);
 			
-			// If we haven't pulled in 5 hours, run a "new" scan (instead of ascending) to force newest reset.
-			if(lastPull < Nav.loadDate - (60 * 60 * 5)) {
+			// If we haven't pulled in 60x that duration (5 mins > 5 hours), run a "new" scan (instead of ascending) to force newest reset.
+			if(lastPull < Nav.loadDate - (60 * Config.cacheDynamic)) {
 				scanType = 0;
 				
 				// Clear out stale data.
+				console.log(`Clearing out stale forum data from ${forum}.`);
 				window.localStorage.removeItem(`posts:${forum}`);
 			}
 		}
@@ -91,7 +94,7 @@ export default abstract class Forum {
 				const postResponse = await Forum.fetchForumPosts(forum, idHigh, idLow, scanType);
 				
 				// Cache Results
-				cachedPosts = Feed.cachePosts(forum, postResponse);
+				Feed.cachePosts(cachedPosts, forum, postResponse);
 				window.localStorage.setItem(`lastPull:${forum}`, `${Nav.loadDate}`);
 			} catch {
 				console.error(`Error with response in forum: ${forum}`)
@@ -108,7 +111,7 @@ export default abstract class Forum {
 		
 		// Get Relevant Status Information
 		const forum = Feed.currentFeed;
-		let cachedPosts = Feed.getCachedPosts(forum);
+		const cachedPosts = Feed.getCachedPosts(forum);
 		const {idHigh, idLow} = Forum.getIdRangeOfCachedPosts(cachedPosts);
 		
 		// Don't auto-load if we've reached the lower limit:
@@ -118,7 +121,7 @@ export default abstract class Forum {
 		const postResponse = await Forum.fetchForumPosts(forum, idHigh, idLow, -1);
 		
 		// Cache Results
-		cachedPosts = Feed.cachePosts(forum, postResponse);
+		Feed.cachePosts(cachedPosts, forum, postResponse);
 		window.localStorage.setItem(`lastPull:${forum}`, `${Nav.loadDate}`);
 		
 		// Display Posts
